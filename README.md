@@ -1,4 +1,4 @@
-# [Play Space Core](https://bishoppawn1.github.io/space_core/)
+# Click here to play: [Space Core](https://bishoppawn1.github.io/space_core/)
 
 Space Core is a browser-based spaceship construction and combat game. Build a ship around the core, launch into the debris field, salvage parts, trade, research upgrades, and fight enemy ships.
 
