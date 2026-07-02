@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "build:pages": "rm -rf dist && mkdir -p dist && cp -R index.html js styles dist/ && touch dist/.nojekyll",
     "start": "node server.js"
   }
 }
