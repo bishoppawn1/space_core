@@ -1,0 +1,50 @@
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(680px, 1fr) 280px;
+  gap: 16px;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.construction-panel,
+.inspector,
+.build-stage {
+  border: 1px solid var(--line);
+  background: rgba(17, 19, 26, 0.94);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.construction-panel,
+.inspector {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 16px;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.build-stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: calc(100vh - 32px);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.panel-header,
+.stage-toolbar,
+.selected-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stage-toolbar {
+  min-height: 62px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(24, 27, 36, 0.9);
+  padding: 12px 14px;
+}

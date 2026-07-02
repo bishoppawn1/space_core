@@ -1,0 +1,1752 @@
+.world-shell {
+  display: grid;
+  grid-template-columns: minmax(760px, 1fr) 270px;
+  gap: 16px;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.world-stage,
+.world-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(17, 19, 26, 0.94);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.world-stage {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.world-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.world-toolbar {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.8fr) minmax(220px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 70px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(24, 27, 36, 0.9);
+  padding: 12px 14px;
+}
+
+.multiplayer-readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 8px 10px;
+}
+
+.multiplayer-readout span {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.multiplayer-readout label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.share-readout {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(101, 217, 236, 0.16);
+  border-radius: 8px;
+  background: rgba(101, 217, 236, 0.045);
+  padding: 8px 10px;
+}
+
+.share-readout span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.share-readout code {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--cyan);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.world-map {
+  position: relative;
+  flex: 1;
+  min-height: 680px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(101, 217, 236, 0.16) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 18%, rgba(242, 184, 75, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 78%, rgba(115, 215, 124, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 44% 36%, rgba(169, 139, 253, 0.11), transparent 28%),
+    radial-gradient(circle at 58% 76%, rgba(244, 125, 79, 0.08), transparent 34%),
+    linear-gradient(135deg, #07080d 0%, #10131b 48%, #090a10 100%);
+}
+
+.world-map::before,
+.world-map::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+}
+
+.world-map::before {
+  z-index: 0;
+  opacity: 0.82;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(101, 217, 236, 0.74) 0 1px, transparent 1.8px),
+    radial-gradient(circle, rgba(242, 184, 75, 0.68) 0 1px, transparent 1.7px);
+  background-position:
+    18px 34px,
+    92px 126px,
+    172px 68px;
+  background-size:
+    150px 140px,
+    230px 210px,
+    310px 260px;
+}
+
+.world-map::after {
+  z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 96px 96px;
+  opacity: 0.28;
+}
+
+.world-space {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.world-backdrop {
+  position: absolute;
+  z-index: 0;
+  display: block;
+  contain: paint;
+  opacity: 0.72;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(101, 217, 236, 0.13) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 18%, rgba(242, 184, 75, 0.1) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 78%, rgba(115, 215, 124, 0.1) 0 1px, transparent 2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.82) 0 1px, transparent 1.7px),
+    radial-gradient(circle, rgba(101, 217, 236, 0.48) 0 1px, transparent 1.8px),
+    radial-gradient(circle, rgba(242, 184, 75, 0.42) 0 1px, transparent 1.7px),
+    linear-gradient(135deg, #07080d 0%, #10131b 48%, #090a10 100%);
+  background-position:
+    18% 22%,
+    82% 18%,
+    72% 78%,
+    18px 34px,
+    92px 126px,
+    172px 68px,
+    0 0;
+  background-size:
+    auto,
+    auto,
+    auto,
+    150px 140px,
+    230px 210px,
+    310px 260px,
+    auto;
+  pointer-events: none;
+}
+
+.world-boundary {
+  position: absolute;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(101, 217, 236, 0.2);
+  box-shadow: inset 0 0 80px rgba(101, 217, 236, 0.05);
+  pointer-events: none;
+}
+
+.world-zone {
+  position: absolute;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.zone-outer {
+  border: 2px solid rgba(115, 215, 124, 0.28);
+}
+
+.zone-middle {
+  border: 2px dashed rgba(242, 184, 75, 0.42);
+}
+
+.zone-core {
+  border: 2px solid rgba(255, 92, 92, 0.48);
+}
+
+.world-ship,
+.world-piece {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.world-ship {
+  z-index: 3;
+  width: 1px;
+  height: 1px;
+}
+
+.world-ship-part {
+  position: absolute;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  transform: translate(-50%, -50%);
+}
+
+.world-shield-range {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  display: block;
+  overflow: hidden;
+  border: 2px solid rgba(101, 217, 236, 0.68);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, rgba(223, 251, 255, 0.18) 0 3%, transparent 4%),
+    radial-gradient(circle at center, rgba(101, 217, 236, 0.12) 0 58%, rgba(101, 217, 236, 0.04) 59% 78%, transparent 79%),
+    repeating-radial-gradient(circle at center, rgba(223, 251, 255, 0.12) 0 1px, transparent 1px 10px);
+  box-shadow:
+    0 0 24px rgba(101, 217, 236, 0.24),
+    inset 0 0 24px rgba(101, 217, 236, 0.16);
+  clip-path: circle(50% at 50% 50%);
+  opacity: 0.78;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.world-shield-range.weak {
+  border-color: rgba(242, 184, 75, 0.78);
+  background:
+    radial-gradient(circle at center, rgba(255, 241, 178, 0.16) 0 3%, transparent 4%),
+    radial-gradient(circle at center, rgba(242, 184, 75, 0.12) 0 58%, rgba(242, 184, 75, 0.04) 59% 78%, transparent 79%),
+    repeating-radial-gradient(circle at center, rgba(255, 241, 178, 0.12) 0 1px, transparent 1px 10px);
+  box-shadow:
+    0 0 22px rgba(242, 184, 75, 0.22),
+    inset 0 0 22px rgba(242, 184, 75, 0.14);
+}
+
+.world-shield-range.critical {
+  border-color: rgba(240, 100, 112, 0.82);
+  background:
+    radial-gradient(circle at center, rgba(255, 210, 216, 0.16) 0 3%, transparent 4%),
+    radial-gradient(circle at center, rgba(240, 100, 112, 0.12) 0 58%, rgba(240, 100, 112, 0.04) 59% 78%, transparent 79%),
+    repeating-radial-gradient(circle at center, rgba(255, 210, 216, 0.13) 0 1px, transparent 1px 10px);
+  box-shadow:
+    0 0 20px rgba(240, 100, 112, 0.24),
+    inset 0 0 20px rgba(240, 100, 112, 0.15);
+}
+
+.world-shield-range.collapsed {
+  border-color: rgba(101, 217, 236, 0.24);
+  background:
+    radial-gradient(circle at center, rgba(101, 217, 236, 0.05) 0 58%, transparent 59%),
+    repeating-radial-gradient(circle at center, rgba(223, 251, 255, 0.05) 0 1px, transparent 1px 14px);
+  box-shadow:
+    0 0 12px rgba(101, 217, 236, 0.08),
+    inset 0 0 14px rgba(101, 217, 236, 0.05);
+  opacity: 0.34;
+}
+
+.world-ship-part::before,
+.world-ship-part::after,
+.world-piece::before,
+.world-piece::after {
+  position: absolute;
+  pointer-events: none;
+  content: "";
+}
+
+button.world-ship-part {
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.world-ship-part.selectable:hover {
+  border-color: var(--cyan);
+}
+
+.world-ship-part.selected {
+  outline: 2px solid rgba(101, 217, 236, 0.92);
+  outline-offset: 3px;
+}
+
+.world-ship-part.engine-active {
+  box-shadow:
+    0 0 12px rgba(244, 125, 79, 0.45),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.16);
+}
+
+.world-ship-part.core {
+  border-color: rgba(242, 184, 75, 0.8);
+  background:
+    radial-gradient(circle at center, rgba(255, 241, 178, 0.98) 0 16%, transparent 17%),
+    conic-gradient(from 45deg, #f2b84b 0 12.5%, #7b4c22 12.5% 25%, #f2b84b 25% 37.5%, #7b4c22 37.5% 50%, #f2b84b 50% 62.5%, #7b4c22 62.5% 75%, #f2b84b 75% 87.5%, #7b4c22 87.5%),
+    #7b4c22;
+  box-shadow:
+    inset 0 0 0 4px #19120b,
+    0 0 0 2px #19120b,
+    0 0 10px rgba(242, 184, 75, 0.22);
+}
+
+.world-ship-part.core::before,
+.world-piece.core::before {
+  inset: 22%;
+  border: 1px solid rgba(255, 241, 178, 0.72);
+  border-radius: 50%;
+}
+
+.world-ship-part.core::after,
+.world-piece.core::after {
+  inset: 42%;
+  border-radius: 50%;
+  background: #fff1b2;
+  box-shadow: 0 0 8px rgba(242, 184, 75, 0.85);
+}
+
+.enemy-ship .world-ship-part {
+  filter: saturate(0.82) brightness(0.9);
+}
+
+.trader-trade-range {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  border: 2px solid rgba(242, 184, 75, 0.62);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, rgba(242, 184, 75, 0.1) 0 58%, rgba(242, 184, 75, 0.04) 59% 78%, transparent 79%),
+    repeating-radial-gradient(circle at center, rgba(255, 241, 178, 0.11) 0 1px, transparent 1px 18px);
+  box-shadow:
+    0 0 32px rgba(242, 184, 75, 0.2),
+    inset 0 0 34px rgba(242, 184, 75, 0.11);
+  opacity: 0.74;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.trader-ship .world-ship-part {
+  border-color: rgba(242, 184, 75, 0.52);
+  box-shadow: 0 0 10px rgba(242, 184, 75, 0.14);
+  filter: saturate(0.96) brightness(1.04);
+}
+
+.trader-ship .world-ship-part:hover {
+  border-color: var(--amber);
+}
+
+.trader-ship.hostile .world-ship-part {
+  border-color: rgba(240, 100, 112, 0.72);
+  box-shadow: 0 0 12px rgba(240, 100, 112, 0.18);
+}
+
+.remote-player-ship .world-ship-part {
+  border-color: rgba(115, 215, 124, 0.42);
+  box-shadow: 0 0 10px rgba(115, 215, 124, 0.12);
+}
+
+.remote-player-ship .world-ship-part:hover {
+  border-color: var(--green);
+}
+
+.remote-player-label {
+  position: absolute;
+  left: 14px;
+  top: -28px;
+  z-index: 8;
+  border: 1px solid rgba(115, 215, 124, 0.52);
+  border-radius: 999px;
+  background: rgba(8, 13, 11, 0.78);
+  color: var(--green);
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 4px 6px;
+  pointer-events: none;
+}
+
+.trader-label {
+  position: absolute;
+  left: 16px;
+  top: -30px;
+  z-index: 8;
+  border: 1px solid rgba(242, 184, 75, 0.62);
+  border-radius: 999px;
+  background: rgba(23, 17, 8, 0.82);
+  color: var(--amber);
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 5px 7px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.trader-ship.hostile .trader-label {
+  border-color: rgba(240, 100, 112, 0.68);
+  background: rgba(28, 9, 12, 0.82);
+  color: var(--red);
+}
+
+.enemy-ship .world-ship-part.core,
+.enemy-core-part,
+.trader-core-part,
+.remote-core-part {
+  width: 22px;
+  height: 22px;
+}
+
+.enemy-ship .world-ship-part.core,
+.enemy-core-part {
+  border-color: rgba(240, 100, 112, 0.86);
+  box-shadow:
+    inset 0 0 0 5px #19120b,
+    0 0 16px rgba(240, 100, 112, 0.2);
+}
+
+.remote-core-part {
+  border-color: rgba(115, 215, 124, 0.86);
+  box-shadow:
+    inset 0 0 0 5px #101810,
+    0 0 16px rgba(115, 215, 124, 0.2);
+}
+
+.trader-core-part {
+  border-color: rgba(242, 184, 75, 0.9);
+  box-shadow:
+    inset 0 0 0 5px #19120b,
+    0 0 16px rgba(242, 184, 75, 0.22);
+}
+
+.trader-ship.hostile .trader-core-part {
+  border-color: rgba(240, 100, 112, 0.9);
+  box-shadow:
+    inset 0 0 0 5px #19120b,
+    0 0 16px rgba(240, 100, 112, 0.24);
+}
+
+.enemy-core-part:hover {
+  border-color: var(--amber);
+}
+
+.world-ship-part.ship-scaffold {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06) 25%, transparent 25% 50%, rgba(255, 255, 255, 0.05) 50% 75%, transparent 75%),
+    #252a33;
+  background-size:
+    50% 100%,
+    100% 50%,
+    8px 8px,
+    auto;
+}
+
+.world-ship-part.ship-scaffold::before,
+.world-piece.ship-scaffold::before {
+  inset: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+.world-ship-part.ship-scaffold::after,
+.world-piece.ship-scaffold::after {
+  inset: 4px;
+  background:
+    radial-gradient(circle at 0 0, rgba(168, 176, 190, 0.9) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 100% 0, rgba(168, 176, 190, 0.9) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 0 100%, rgba(168, 176, 190, 0.9) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 100% 100%, rgba(168, 176, 190, 0.9) 0 1px, transparent 1.4px);
+}
+
+.world-ship-part.power-generator {
+  background:
+    linear-gradient(90deg, transparent 0 18%, rgba(223, 251, 255, 0.22) 18% 25%, transparent 25% 75%, rgba(223, 251, 255, 0.22) 75% 82%, transparent 82%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 58%),
+    #2f7a4e;
+}
+
+.world-ship-part.power-generator::before,
+.world-piece.power-generator::before {
+  inset: 20% 28%;
+  border: 1px solid rgba(223, 251, 255, 0.62);
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(90deg, rgba(223, 251, 255, 0.9) 0 1px, transparent 1px 3px),
+    rgba(20, 68, 48, 0.86);
+  box-shadow: 0 0 7px rgba(115, 215, 124, 0.3);
+}
+
+.world-ship-part.power-generator::after,
+.world-piece.power-generator::after {
+  inset: 12% 38%;
+  background:
+    linear-gradient(0deg, transparent 0 12%, rgba(223, 251, 255, 0.7) 12% 22%, transparent 22% 78%, rgba(223, 251, 255, 0.7) 78% 88%, transparent 88%);
+}
+
+.world-ship-part.fusion-generator {
+  background:
+    linear-gradient(90deg, transparent 0 15%, rgba(223, 251, 255, 0.26) 15% 24%, transparent 24% 76%, rgba(223, 251, 255, 0.26) 76% 85%, transparent 85%),
+    radial-gradient(circle at center, rgba(255, 241, 178, 0.9) 0 12%, transparent 13%),
+    #4f6f39;
+}
+
+.world-ship-part.fusion-generator::before,
+.world-piece.fusion-generator::before {
+  inset: 18% 24%;
+  border: 1px solid rgba(255, 241, 178, 0.72);
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(90deg, rgba(223, 251, 255, 0.86) 0 1px, transparent 1px 3px),
+    rgba(35, 82, 48, 0.88);
+  box-shadow: 0 0 8px rgba(242, 184, 75, 0.34);
+}
+
+.world-ship-part.fusion-generator::after,
+.world-piece.fusion-generator::after {
+  inset: 30%;
+  border-radius: 50%;
+  background: rgba(255, 241, 178, 0.82);
+  box-shadow: 0 0 8px rgba(242, 184, 75, 0.7);
+}
+
+.world-ship-part.engine {
+  background:
+    radial-gradient(ellipse at 50% 84%, rgba(20, 12, 10, 0.95) 0 24%, transparent 25%),
+    linear-gradient(180deg, rgba(255, 203, 116, 0.22), transparent 48%),
+    #b45736;
+}
+
+.world-ship-part.engine::before,
+.world-piece.engine::before {
+  inset: 16% 28% 42%;
+  border-radius: 3px 3px 2px 2px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.2), transparent 36% 64%, rgba(0, 0, 0, 0.22)),
+    #6b2b1d;
+}
+
+.world-ship-part.engine::after,
+.world-piece.engine::after {
+  left: 34%;
+  right: 34%;
+  bottom: 8%;
+  height: 30%;
+  border-radius: 50% 50% 45% 45%;
+  background:
+    radial-gradient(ellipse at 50% 82%, rgba(255, 241, 178, 0.9), rgba(244, 125, 79, 0.74) 45%, transparent 72%);
+  filter: drop-shadow(0 0 3px rgba(244, 125, 79, 0.58));
+}
+
+.world-ship-part.overdrive-engine {
+  background:
+    radial-gradient(ellipse at 50% 84%, rgba(5, 14, 20, 0.94) 0 24%, transparent 25%),
+    linear-gradient(180deg, rgba(101, 217, 236, 0.26), transparent 48%),
+    #2f6f7f;
+}
+
+.world-ship-part.overdrive-engine::before,
+.world-piece.overdrive-engine::before {
+  inset: 15% 24% 40%;
+  border-radius: 3px 3px 2px 2px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.22), transparent 36% 64%, rgba(0, 0, 0, 0.22)),
+    #153847;
+  box-shadow: 0 0 0 1px rgba(101, 217, 236, 0.2);
+}
+
+.world-ship-part.overdrive-engine::after,
+.world-piece.overdrive-engine::after {
+  left: 30%;
+  right: 30%;
+  bottom: 7%;
+  height: 34%;
+  border-radius: 50% 50% 45% 45%;
+  background:
+    radial-gradient(ellipse at 50% 82%, #dffbff, rgba(101, 217, 236, 0.84) 45%, transparent 74%);
+  filter: drop-shadow(0 0 5px rgba(101, 217, 236, 0.7));
+}
+
+.world-ship-part.quantum-thruster {
+  background:
+    radial-gradient(ellipse at 50% 84%, rgba(12, 5, 28, 0.94) 0 24%, transparent 25%),
+    linear-gradient(180deg, rgba(169, 139, 253, 0.28), transparent 48%),
+    #483c7a;
+}
+
+.world-ship-part.quantum-thruster::before,
+.world-piece.quantum-thruster::before {
+  inset: 13% 22% 38%;
+  border-radius: 3px 3px 2px 2px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.24), transparent 36% 64%, rgba(0, 0, 0, 0.22)),
+    #221c49;
+  box-shadow: 0 0 0 1px rgba(169, 139, 253, 0.26);
+}
+
+.world-ship-part.quantum-thruster::after,
+.world-piece.quantum-thruster::after {
+  left: 27%;
+  right: 27%;
+  bottom: 5%;
+  height: 38%;
+  border-radius: 50% 50% 45% 45%;
+  background:
+    radial-gradient(ellipse at 50% 82%, #f2f5f8, rgba(169, 139, 253, 0.88) 45%, transparent 75%);
+  filter: drop-shadow(0 0 6px rgba(169, 139, 253, 0.76));
+}
+
+.world-ship-part.engine-active::after {
+  bottom: -8%;
+  height: 44%;
+  background:
+    radial-gradient(ellipse at 50% 82%, #fff1b2, rgba(244, 125, 79, 0.9) 45%, transparent 76%);
+  filter: drop-shadow(0 0 7px rgba(244, 125, 79, 0.9));
+}
+
+.world-ship-part.laser {
+  background:
+    linear-gradient(90deg, rgba(223, 251, 255, 0.18) 0 18%, transparent 18% 82%, rgba(223, 251, 255, 0.18) 82%),
+    radial-gradient(circle at center, #dffbff 0 16%, transparent 17%),
+    #225b67;
+}
+
+.world-ship-part.laser::before,
+.world-piece.laser::before {
+  left: 15%;
+  right: 15%;
+  top: 42%;
+  height: 16%;
+  border-radius: 999px;
+  background: rgba(7, 28, 34, 0.86);
+  box-shadow: 0 0 5px rgba(101, 217, 236, 0.3);
+}
+
+.world-ship-part.laser::after,
+.world-piece.laser::after {
+  inset: 31%;
+  border: 1px solid rgba(223, 251, 255, 0.84);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(223, 251, 255, 0.96) 0 32%, rgba(101, 217, 236, 0.86) 33% 56%, transparent 57%);
+}
+
+.world-ship-part.beam-laser {
+  background:
+    linear-gradient(90deg, rgba(223, 251, 255, 0.22) 0 14%, transparent 14% 86%, rgba(223, 251, 255, 0.22) 86%),
+    radial-gradient(circle at center, #f2f5f8 0 13%, transparent 14%),
+    #4b3f82;
+}
+
+.world-ship-part.beam-laser::before,
+.world-piece.beam-laser::before {
+  left: 10%;
+  right: 10%;
+  top: 39%;
+  height: 22%;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(101, 217, 236, 0.9), rgba(169, 139, 253, 0.94), rgba(101, 217, 236, 0.9));
+  box-shadow: 0 0 7px rgba(169, 139, 253, 0.46);
+}
+
+.world-ship-part.beam-laser::after,
+.world-piece.beam-laser::after {
+  inset: 27%;
+  border: 1px solid rgba(223, 251, 255, 0.9);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.98) 0 26%, rgba(169, 139, 253, 0.9) 27% 58%, transparent 59%);
+}
+
+.world-ship-part.pulse-laser {
+  background:
+    linear-gradient(90deg, rgba(223, 251, 255, 0.2) 0 16%, transparent 16% 84%, rgba(223, 251, 255, 0.2) 84%),
+    radial-gradient(circle at center, #fff1b2 0 13%, transparent 14%),
+    #276059;
+}
+
+.world-ship-part.pulse-laser::before,
+.world-piece.pulse-laser::before {
+  left: 12%;
+  right: 12%;
+  top: 39%;
+  height: 20%;
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 241, 178, 0.96) 0 4px, rgba(101, 217, 236, 0.92) 4px 8px);
+  box-shadow: 0 0 6px rgba(115, 215, 124, 0.44);
+}
+
+.world-ship-part.pulse-laser::after,
+.world-piece.pulse-laser::after {
+  inset: 28%;
+  border: 1px solid rgba(255, 241, 178, 0.84);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 241, 178, 0.98) 0 26%, rgba(101, 217, 236, 0.88) 27% 58%, transparent 59%);
+}
+
+.world-ship-part.shield-block,
+.world-piece.shield-block {
+  background:
+    radial-gradient(circle at center, rgba(223, 251, 255, 0.28) 0 26%, transparent 27%),
+    linear-gradient(135deg, rgba(101, 217, 236, 0.22), transparent 48%),
+    #25566a;
+}
+
+.world-ship-part.shield-block::before,
+.world-piece.shield-block::before {
+  inset: 18%;
+  border: 1px solid rgba(101, 217, 236, 0.86);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(223, 251, 255, 0.92) 0 15%, rgba(101, 217, 236, 0.26) 16% 52%, transparent 53%);
+  box-shadow:
+    0 0 8px rgba(101, 217, 236, 0.42),
+    inset 0 0 6px rgba(223, 251, 255, 0.22);
+}
+
+.world-ship-part.shield-block::after,
+.world-piece.shield-block::after {
+  inset: 12%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(223, 251, 255, 0.9) 0 6%, transparent 7%),
+    radial-gradient(circle at 92% 50%, rgba(223, 251, 255, 0.9) 0 6%, transparent 7%),
+    radial-gradient(circle at 50% 92%, rgba(223, 251, 255, 0.9) 0 6%, transparent 7%),
+    radial-gradient(circle at 8% 50%, rgba(223, 251, 255, 0.9) 0 6%, transparent 7%);
+}
+
+.world-ship-part.shield-block.shield-online {
+  box-shadow:
+    0 0 0 16px rgba(101, 217, 236, 0.08),
+    0 0 20px rgba(101, 217, 236, 0.32),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.16);
+}
+
+.world-ship-part.cannon {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 58%),
+    #4b5568;
+}
+
+.world-ship-part.cannon::before,
+.world-piece.cannon::before {
+  left: 15%;
+  right: 15%;
+  top: 38%;
+  height: 24%;
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg, #d9dde5 0 30%, #8e96a6 31% 70%, #252b36 71%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
+}
+
+.world-ship-part.cannon::after,
+.world-piece.cannon::after {
+  right: 10%;
+  top: 31%;
+  width: 18%;
+  height: 38%;
+  border-radius: 2px;
+  background: #171c25;
+  box-shadow: -2px 0 0 rgba(242, 184, 75, 0.34);
+}
+
+.world-ship-part.long-range-cannon {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 58%),
+    #58657a;
+}
+
+.world-ship-part.long-range-cannon::before,
+.world-piece.long-range-cannon::before {
+  left: 8%;
+  right: 8%;
+  top: 36%;
+  height: 22%;
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg, #edf2f7 0 28%, #aeb8ca 29% 70%, #252b36 71%);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.22),
+    inset -7px 0 0 rgba(242, 184, 75, 0.18);
+}
+
+.world-ship-part.long-range-cannon::after,
+.world-piece.long-range-cannon::after {
+  right: 6%;
+  top: 29%;
+  width: 16%;
+  height: 42%;
+  border-radius: 2px;
+  background: #101722;
+  box-shadow: -4px 0 0 rgba(242, 184, 75, 0.42);
+}
+
+.world-ship-part.railgun {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 56%),
+    #3c4660;
+}
+
+.world-ship-part.railgun::before,
+.world-piece.railgun::before {
+  left: 5%;
+  right: 5%;
+  top: 34%;
+  height: 18%;
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg, #dffbff 0 26%, #8ea4c4 27% 70%, #171c25 71%);
+  box-shadow:
+    0 -4px 0 rgba(101, 217, 236, 0.28),
+    0 4px 0 rgba(101, 217, 236, 0.18);
+}
+
+.world-ship-part.railgun::after,
+.world-piece.railgun::after {
+  right: 4%;
+  top: 27%;
+  width: 14%;
+  height: 46%;
+  border-radius: 2px;
+  background: #0d1018;
+  box-shadow: -5px 0 0 rgba(101, 217, 236, 0.42);
+}
+
+.world-ship-part.ammo-factory {
+  background:
+    repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.28) 0 2px, rgba(0, 0, 0, 0.28) 2px 4px, transparent 4px 7px),
+    #8d6a25;
+}
+
+.world-ship-part.ammo-factory::before,
+.world-piece.ammo-factory::before {
+  inset: 18% 20% 46%;
+  border-radius: 2px;
+  background:
+    radial-gradient(circle at 24% 50%, #f2b84b 0 16%, transparent 17%),
+    radial-gradient(circle at 50% 50%, #f2b84b 0 16%, transparent 17%),
+    radial-gradient(circle at 76% 50%, #f2b84b 0 16%, transparent 17%),
+    #3e2f17;
+}
+
+.world-ship-part.ammo-factory::after,
+.world-piece.ammo-factory::after {
+  inset: 58% 26% 16%;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, transparent 0 44%, rgba(255, 241, 178, 0.8) 44% 56%, transparent 56%),
+    #5d451d;
+}
+
+.world-ship-part.rapid-ammo-factory {
+  background:
+    repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.28) 0 2px, rgba(0, 0, 0, 0.28) 2px 4px, transparent 4px 7px),
+    linear-gradient(90deg, rgba(101, 217, 236, 0.18), transparent 26% 74%, rgba(101, 217, 236, 0.18)),
+    #8b7a2e;
+}
+
+.world-ship-part.rapid-ammo-factory::before,
+.world-piece.rapid-ammo-factory::before {
+  inset: 16% 16% 44%;
+  border-radius: 2px;
+  background:
+    radial-gradient(circle at 18% 50%, #fff1b2 0 13%, transparent 14%),
+    radial-gradient(circle at 40% 50%, #fff1b2 0 13%, transparent 14%),
+    radial-gradient(circle at 62% 50%, #fff1b2 0 13%, transparent 14%),
+    radial-gradient(circle at 84% 50%, #fff1b2 0 13%, transparent 14%),
+    #3e2f17;
+}
+
+.world-ship-part.rapid-ammo-factory::after,
+.world-piece.rapid-ammo-factory::after {
+  inset: 58% 22% 15%;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, transparent 0 40%, rgba(101, 217, 236, 0.82) 40% 60%, transparent 60%),
+    #5d541d;
+}
+
+.world-ship-part.repair-bot-block,
+.world-piece.repair-bot-block {
+  background:
+    linear-gradient(90deg, rgba(223, 251, 255, 0.14), transparent 22% 78%, rgba(223, 251, 255, 0.14)),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 6px),
+    #3b653d;
+}
+
+.world-ship-part.repair-bot-block::before,
+.world-piece.repair-bot-block::before {
+  inset: 18% 18% 42%;
+  border: 1px solid rgba(223, 251, 255, 0.62);
+  border-radius: 3px 3px 6px 6px;
+  background:
+    radial-gradient(circle at 28% 50%, #dffbff 0 11%, transparent 12%),
+    radial-gradient(circle at 72% 50%, #dffbff 0 11%, transparent 12%),
+    #14371e;
+  box-shadow: 0 0 7px rgba(115, 215, 124, 0.34);
+}
+
+.world-ship-part.repair-bot-block::after,
+.world-piece.repair-bot-block::after {
+  left: 22%;
+  right: 22%;
+  bottom: 14%;
+  height: 26%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(223, 251, 255, 0.96) 0 11%, transparent 12%),
+    radial-gradient(circle at 50% 50%, rgba(115, 215, 124, 0.96) 0 12%, transparent 13%),
+    radial-gradient(circle at 80% 50%, rgba(223, 251, 255, 0.96) 0 11%, transparent 12%),
+    rgba(13, 28, 18, 0.92);
+}
+
+.world-ship-part.repair-bot-block.repair-online {
+  box-shadow:
+    0 0 14px rgba(115, 215, 124, 0.34),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.16);
+}
+
+.world-ship-part.salvage-collector,
+.world-piece.salvage-collector {
+  background:
+    radial-gradient(circle at center, rgba(255, 241, 178, 0.28) 0 24%, transparent 25%),
+    linear-gradient(90deg, rgba(242, 184, 75, 0.2), transparent 28% 72%, rgba(101, 217, 236, 0.18)),
+    #4b5935;
+}
+
+.world-ship-part.salvage-collector::before,
+.world-piece.salvage-collector::before {
+  inset: 16% 18% 34%;
+  border: 1px solid rgba(255, 241, 178, 0.72);
+  border-radius: 50% 50% 42% 42%;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 241, 178, 0.96) 0 12%, transparent 13%),
+    repeating-radial-gradient(circle at center, rgba(223, 251, 255, 0.28) 0 1px, transparent 1px 5px),
+    rgba(28, 42, 27, 0.92);
+  box-shadow: 0 0 8px rgba(242, 184, 75, 0.32);
+}
+
+.world-ship-part.salvage-collector::after,
+.world-piece.salvage-collector::after {
+  left: 26%;
+  right: 26%;
+  bottom: 14%;
+  height: 32%;
+  border-radius: 4px;
+  background:
+    linear-gradient(90deg, transparent 0 38%, rgba(255, 241, 178, 0.9) 38% 62%, transparent 62%),
+    #1c2c22;
+}
+
+.world-ship-part.salvage-collector.salvage-online {
+  box-shadow:
+    0 0 16px rgba(242, 184, 75, 0.36),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.16);
+}
+
+.world-ship-part.conveyor-belt {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 22% 78%, rgba(0, 0, 0, 0.18)),
+    #3a4654;
+}
+
+.world-ship-part.conveyor-belt::before {
+  position: absolute;
+  inset: 2px;
+  border-radius: 2px;
+  background:
+    linear-gradient(0deg, rgba(242, 184, 75, 0.5) 0 20%, transparent 20%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.26) 0 2px, transparent 2px 5px),
+    linear-gradient(90deg, transparent 0 30%, rgba(0, 0, 0, 0.22) 30% 70%, transparent 70%);
+  content: "";
+  transform-origin: center;
+}
+
+.world-ship-part.conveyor-belt::after,
+.world-piece.conveyor-belt::after {
+  inset: 40% 28%;
+  border-radius: 999px;
+  background: rgba(242, 184, 75, 0.72);
+  box-shadow:
+    -4px 0 0 rgba(12, 16, 24, 0.56),
+    4px 0 0 rgba(12, 16, 24, 0.56);
+}
+
+.world-ship-part.conveyor-belt.direction-right::before {
+  transform: rotate(90deg);
+}
+
+.world-ship-part.conveyor-belt.direction-down::before {
+  transform: rotate(180deg);
+}
+
+.world-ship-part.conveyor-belt.direction-left::before {
+  transform: rotate(270deg);
+}
+
+.world-ship-part.splitter-conveyor,
+.world-piece.splitter-conveyor {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 24% 76%, rgba(0, 0, 0, 0.2)),
+    #334f61;
+}
+
+.world-ship-part.splitter-conveyor::before,
+.world-piece.splitter-conveyor::before {
+  inset: 2px;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, transparent 0 9%, rgba(101, 217, 236, 0.88) 9% 91%, transparent 91%) 50% 56% / 100% 28% no-repeat,
+    linear-gradient(0deg, transparent 0 44%, rgba(242, 184, 75, 0.88) 44% 100%) 50% 50% / 28% 100% no-repeat,
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.22) 0 2px, transparent 2px 5px),
+    rgba(13, 21, 31, 0.72);
+  transform-origin: center;
+}
+
+.world-ship-part.splitter-conveyor::after,
+.world-piece.splitter-conveyor::after {
+  top: calc(50% - 3px);
+  left: calc(50% - 3px);
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 241, 178, 0.95);
+  box-shadow:
+    0 -7px 0 rgba(242, 184, 75, 0.8),
+    -7px 0 0 rgba(101, 217, 236, 0.78),
+    7px 0 0 rgba(101, 217, 236, 0.78);
+  transform-origin: center;
+}
+
+.world-ship-part.splitter-conveyor.direction-right::before,
+.world-ship-part.splitter-conveyor.direction-right::after {
+  transform: rotate(90deg);
+}
+
+.world-ship-part.splitter-conveyor.direction-down::before,
+.world-ship-part.splitter-conveyor.direction-down::after {
+  transform: rotate(180deg);
+}
+
+.world-ship-part.splitter-conveyor.direction-left::before,
+.world-ship-part.splitter-conveyor.direction-left::after {
+  transform: rotate(270deg);
+}
+
+.world-ship-part.electric-cable {
+  width: 12px;
+  height: 12px;
+  border-color: rgba(101, 217, 236, 0.75);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(223, 251, 255, 0.96) 0 12%, transparent 13%),
+    linear-gradient(90deg, transparent 0 38%, rgba(101, 217, 236, 0.9) 38% 62%, transparent 62%),
+    linear-gradient(0deg, transparent 0 38%, rgba(101, 217, 236, 0.9) 38% 62%, transparent 62%),
+    #111820;
+  box-shadow: 0 0 7px rgba(101, 217, 236, 0.24);
+}
+
+.world-ship-part.electric-cable::before,
+.world-piece.electric-cable::before {
+  inset: 2px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(101, 217, 236, 0.85) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 80% 50%, rgba(101, 217, 236, 0.85) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 50% 20%, rgba(101, 217, 236, 0.85) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 50% 80%, rgba(101, 217, 236, 0.85) 0 1px, transparent 1.4px);
+}
+
+.cable-underlay-indicator {
+  position: absolute;
+  inset: 4px;
+  z-index: 4;
+  border: 1px solid rgba(101, 217, 236, 0.88);
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, transparent 0 38%, rgba(101, 217, 236, 0.9) 38% 62%, transparent 62%),
+    linear-gradient(0deg, transparent 0 38%, rgba(101, 217, 236, 0.9) 38% 62%, transparent 62%);
+  box-shadow: 0 0 6px rgba(101, 217, 236, 0.35);
+  pointer-events: none;
+}
+
+.world-piece {
+  z-index: 2;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 5px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.24);
+}
+
+.world-piece.loose {
+  outline: 1px solid rgba(115, 215, 124, 0.72);
+  outline-offset: 3px;
+}
+
+.world-piece.core-linked {
+  outline: 1px solid rgba(240, 100, 112, 0.64);
+  outline-offset: 3px;
+}
+
+.weapon-target-marker {
+  position: absolute;
+  z-index: 4;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(101, 217, 236, 0.92);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(5, 7, 12, 0.75),
+    0 0 14px rgba(101, 217, 236, 0.38);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.weapon-target-marker::before,
+.weapon-target-marker::after {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(101, 217, 236, 0.78);
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+.weapon-target-marker::after {
+  width: 2px;
+  height: 36px;
+}
+
+.world-ship-part.has-health,
+.world-piece.has-health {
+  overflow: visible;
+}
+
+.health-bar {
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  z-index: 8;
+  width: 24px;
+  height: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(5, 7, 12, 0.82);
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.health-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.health-bar.healthy .health-fill {
+  background: #73d77c;
+}
+
+.health-bar.wounded .health-fill {
+  background: #f2b84b;
+}
+
+.health-bar.critical .health-fill {
+  background: #f06470;
+}
+
+.world-piece.ship-scaffold {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06) 25%, transparent 25% 50%, rgba(255, 255, 255, 0.05) 50% 75%, transparent 75%),
+    #252a33;
+  background-size:
+    50% 100%,
+    100% 50%,
+    8px 8px,
+    auto;
+}
+
+.world-piece.power-generator {
+  background:
+    linear-gradient(90deg, transparent 0 18%, rgba(223, 251, 255, 0.22) 18% 25%, transparent 25% 75%, rgba(223, 251, 255, 0.22) 75% 82%, transparent 82%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 58%),
+    #2f7a4e;
+}
+
+.world-piece.fusion-generator {
+  background:
+    linear-gradient(90deg, transparent 0 15%, rgba(223, 251, 255, 0.26) 15% 24%, transparent 24% 76%, rgba(223, 251, 255, 0.26) 76% 85%, transparent 85%),
+    radial-gradient(circle at center, rgba(255, 241, 178, 0.9) 0 12%, transparent 13%),
+    #4f6f39;
+}
+
+.world-piece.engine {
+  background:
+    radial-gradient(ellipse at 50% 84%, rgba(20, 12, 10, 0.95) 0 24%, transparent 25%),
+    linear-gradient(180deg, rgba(255, 203, 116, 0.22), transparent 48%),
+    #b45736;
+}
+
+.world-piece.overdrive-engine {
+  background:
+    radial-gradient(ellipse at 50% 84%, rgba(5, 14, 20, 0.94) 0 24%, transparent 25%),
+    linear-gradient(180deg, rgba(101, 217, 236, 0.26), transparent 48%),
+    #2f6f7f;
+}
+
+.world-piece.quantum-thruster {
+  background:
+    radial-gradient(ellipse at 50% 84%, rgba(12, 5, 28, 0.94) 0 24%, transparent 25%),
+    linear-gradient(180deg, rgba(169, 139, 253, 0.28), transparent 48%),
+    #483c7a;
+}
+
+.world-piece.laser {
+  background:
+    linear-gradient(90deg, rgba(223, 251, 255, 0.18) 0 18%, transparent 18% 82%, rgba(223, 251, 255, 0.18) 82%),
+    radial-gradient(circle at center, #dffbff 0 16%, transparent 17%),
+    #225b67;
+}
+
+.world-piece.beam-laser {
+  background:
+    linear-gradient(90deg, rgba(223, 251, 255, 0.22) 0 14%, transparent 14% 86%, rgba(223, 251, 255, 0.22) 86%),
+    radial-gradient(circle at center, #f2f5f8 0 13%, transparent 14%),
+    #4b3f82;
+}
+
+.world-piece.pulse-laser {
+  background:
+    linear-gradient(90deg, rgba(223, 251, 255, 0.2) 0 16%, transparent 16% 84%, rgba(223, 251, 255, 0.2) 84%),
+    radial-gradient(circle at center, #fff1b2 0 13%, transparent 14%),
+    #276059;
+}
+
+.world-piece.cannon {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 58%),
+    #4b5568;
+}
+
+.world-piece.long-range-cannon {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 58%),
+    #58657a;
+}
+
+.world-piece.railgun {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 56%),
+    #3c4660;
+}
+
+.world-piece.ammo-factory {
+  background:
+    repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.28) 0 2px, rgba(0, 0, 0, 0.28) 2px 4px, transparent 4px 7px),
+    #8d6a25;
+}
+
+.world-piece.rapid-ammo-factory {
+  background:
+    repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.28) 0 2px, rgba(0, 0, 0, 0.28) 2px 4px, transparent 4px 7px),
+    linear-gradient(90deg, rgba(101, 217, 236, 0.18), transparent 26% 74%, rgba(101, 217, 236, 0.18)),
+    #8b7a2e;
+}
+
+.world-piece.conveyor-belt {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 22% 78%, rgba(0, 0, 0, 0.18)),
+    #3a4654;
+}
+
+.world-piece.conveyor-belt::before {
+  inset: 3px;
+  border-radius: 3px;
+  background:
+    linear-gradient(0deg, rgba(242, 184, 75, 0.5) 0 18%, transparent 18%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.28) 0 2px, transparent 2px 5px),
+    linear-gradient(90deg, transparent 0 30%, rgba(0, 0, 0, 0.22) 30% 70%, transparent 70%);
+}
+
+.world-piece.electric-cable {
+  border-color: rgba(101, 217, 236, 0.75);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(223, 251, 255, 0.96) 0 12%, transparent 13%),
+    linear-gradient(90deg, transparent 0 38%, rgba(101, 217, 236, 0.9) 38% 62%, transparent 62%),
+    linear-gradient(0deg, transparent 0 38%, rgba(101, 217, 236, 0.9) 38% 62%, transparent 62%),
+    #111820;
+  box-shadow: 0 0 10px rgba(101, 217, 236, 0.22);
+}
+
+.world-piece.scrap {
+  width: 16px;
+  height: 16px;
+  border-color: rgba(242, 184, 75, 0.88);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 34%, #fff1b2 0 12%, transparent 13%),
+    radial-gradient(circle at 62% 64%, rgba(244, 125, 79, 0.9) 0 16%, transparent 17%),
+    linear-gradient(135deg, #f2b84b, #7b4c22);
+  box-shadow:
+    0 0 12px rgba(242, 184, 75, 0.36),
+    inset 0 0 0 2px rgba(20, 14, 8, 0.28);
+}
+
+.world-piece.scrap.loose {
+  outline-color: rgba(242, 184, 75, 0.78);
+}
+
+.world-piece.scrap::before {
+  inset: 3px 5px;
+  border-radius: 2px;
+  background: rgba(255, 241, 178, 0.58);
+  transform: rotate(-28deg);
+}
+
+.world-piece.scrap::after {
+  inset: 5px 3px;
+  border-radius: 2px;
+  background: rgba(123, 76, 34, 0.64);
+  transform: rotate(34deg);
+}
+
+.weapon-effect {
+  position: absolute;
+  z-index: 5;
+  height: 2px;
+  border-radius: 999px;
+  pointer-events: none;
+  transform-origin: left center;
+}
+
+.weapon-effect.laser {
+  background: var(--cyan);
+  box-shadow: 0 0 10px rgba(101, 217, 236, 0.8);
+}
+
+.weapon-effect.beam-laser {
+  height: 3px;
+  background: linear-gradient(90deg, var(--cyan), var(--violet), var(--cyan));
+  box-shadow: 0 0 13px rgba(169, 139, 253, 0.82);
+}
+
+.weapon-effect.pulse-laser {
+  height: 2px;
+  background: linear-gradient(90deg, var(--amber), var(--cyan), var(--amber));
+  box-shadow: 0 0 11px rgba(115, 215, 124, 0.7);
+}
+
+.weapon-effect.cannon {
+  height: 4px;
+  background: var(--amber);
+  box-shadow: 0 0 10px rgba(242, 184, 75, 0.5);
+}
+
+.weapon-effect.long-range-cannon {
+  height: 4px;
+  background: #fff1b2;
+  box-shadow: 0 0 12px rgba(242, 184, 75, 0.72);
+}
+
+.weapon-effect.railgun {
+  height: 5px;
+  background: #dffbff;
+  box-shadow: 0 0 16px rgba(101, 217, 236, 0.86);
+}
+
+.weapon-effect.repair-bot {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--green), #dffbff, transparent);
+  box-shadow: 0 0 10px rgba(115, 215, 124, 0.72);
+}
+
+.weapon-effect.salvage-collector {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--amber), var(--cyan), transparent);
+  box-shadow:
+    0 0 13px rgba(242, 184, 75, 0.7),
+    0 0 6px rgba(101, 217, 236, 0.48);
+}
+
+.weapon-effect.shield-impact {
+  height: 3px;
+  background: linear-gradient(90deg, rgba(223, 251, 255, 0.96), var(--cyan), transparent);
+  box-shadow:
+    0 0 12px rgba(101, 217, 236, 0.85),
+    0 0 4px rgba(223, 251, 255, 0.9);
+}
+
+.projectile {
+  position: absolute;
+  z-index: 6;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.cannon-projectile {
+  background: var(--amber);
+  box-shadow: 0 0 12px rgba(242, 184, 75, 0.75);
+}
+
+.projectile.long-range-cannon {
+  width: 10px;
+  height: 10px;
+  background: #fff1b2;
+  box-shadow: 0 0 14px rgba(242, 184, 75, 0.86);
+}
+
+.projectile.railgun {
+  width: 12px;
+  height: 12px;
+  background: #dffbff;
+  box-shadow: 0 0 16px rgba(101, 217, 236, 0.9);
+}
+
+.ammo-badge {
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 14px;
+  height: 14px;
+  border: 1px solid rgba(242, 184, 75, 0.72);
+  border-radius: 999px;
+  background: #14161e;
+  color: var(--amber);
+  font-size: 0.58rem;
+  font-weight: 950;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.trade-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 7, 12, 0.72);
+  padding: 22px;
+}
+
+.trade-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(1080px, 96vw);
+  max-height: min(720px, 92vh);
+  overflow: hidden;
+  border: 1px solid rgba(242, 184, 75, 0.32);
+  border-radius: var(--radius);
+  background: rgba(17, 19, 26, 0.98);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.5),
+    0 0 32px rgba(242, 184, 75, 0.08);
+}
+
+.trade-header,
+.trade-stock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trade-header {
+  min-height: 70px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(24, 27, 36, 0.94);
+  padding: 14px 16px;
+}
+
+.trade-body {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.trade-cargo,
+.trade-stock {
+  min-height: 0;
+  padding: 16px;
+}
+
+.trade-cargo {
+  border-right: 1px solid var(--line);
+  background: rgba(13, 15, 21, 0.68);
+}
+
+.trade-cargo h3,
+.trade-stock h3 {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.trade-stock-header {
+  margin-bottom: 12px;
+}
+
+.trade-stock-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trade-stock-actions .mini-action {
+  min-height: 30px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.trade-stock-header span {
+  border: 1px solid rgba(242, 184, 75, 0.36);
+  border-radius: 999px;
+  background: rgba(242, 184, 75, 0.06);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  padding: 6px 10px;
+}
+
+.trade-stock-header strong {
+  color: var(--amber);
+}
+
+.trade-cargo-list {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  max-height: calc(92vh - 160px);
+  overflow: auto;
+  padding-top: 12px;
+}
+
+.trade-cargo-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #151821;
+  padding: 5px;
+}
+
+.trade-cargo-row .mini-action {
+  min-height: 30px;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.trade-cargo-row.artifact {
+  border-color: rgba(242, 184, 75, 0.38);
+  background: rgba(35, 28, 13, 0.72);
+}
+
+.trade-cargo-label {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.trade-cargo-label strong,
+.trade-slot-body strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trade-cargo-label span,
+.trade-slot-body span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trade-stock-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(128px, 1fr));
+  gap: 10px;
+}
+
+.trade-slot {
+  display: grid;
+  grid-template-rows: 54px minmax(112px, 1fr) auto;
+  gap: 10px;
+  min-width: 0;
+  min-height: 220px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #151821;
+  padding: 10px;
+}
+
+.trade-slot.artifact {
+  border-color: rgba(242, 184, 75, 0.5);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(242, 184, 75, 0.12), transparent 42%),
+    #171611;
+}
+
+.trade-slot-preview {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.trade-slot-preview .tile-preview,
+.trade-cargo-row .tile-preview {
+  width: 30px;
+  height: 30px;
+}
+
+.trade-slot-preview.empty {
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+.trade-slot-body {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  gap: 5px;
+}
+
+.trade-slot-description {
+  display: -webkit-box;
+  min-height: 58px;
+  overflow: hidden;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.trade-slot .mini-action {
+  width: 100%;
+  min-width: 0;
+}
+
+.artifact-preview {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(242, 184, 75, 0.68);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #fff1b2 0 16%, rgba(242, 184, 75, 0.76) 17% 42%, rgba(82, 52, 19, 0.86) 43%),
+    #211709;
+  box-shadow:
+    0 0 14px rgba(242, 184, 75, 0.32),
+    inset 0 0 12px rgba(255, 241, 178, 0.2);
+}
+
+.artifact-preview::before,
+.artifact-preview::after {
+  position: absolute;
+  inset: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 241, 178, 0.86);
+  content: "";
+}
+
+.artifact-preview::after {
+  transform: rotate(90deg);
+}
+
+.trade-empty {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #151821;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  padding: 12px;
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  .trade-body {
+    grid-template-columns: 1fr;
+  }
+
+  .trade-cargo {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .trade-cargo-list {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    max-height: 180px;
+  }
+
+  .trade-stock-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}

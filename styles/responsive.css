@@ -1,0 +1,105 @@
+@media (max-width: 1160px) {
+  .app-shell {
+    grid-template-columns: 260px minmax(420px, 1fr);
+  }
+
+  .inspector {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(220px, 0.8fr) 1.2fr minmax(220px, 0.8fr);
+    align-items: start;
+  }
+
+  .ship-readout {
+    margin-top: 0;
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 820px) {
+  :root {
+    --cell: 28px;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .construction-panel {
+    order: 2;
+  }
+
+  .build-stage {
+    order: 1;
+  }
+
+  .inspector {
+    order: 3;
+    display: flex;
+  }
+
+  .tile-palette {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tile-button {
+    grid-template-columns: 34px 1fr;
+  }
+
+  .cost-pill {
+    display: none;
+  }
+
+  .board-frame {
+    justify-content: flex-start;
+  }
+
+  .world-shell {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .board-frame,
+  .world-map {
+    min-height: 560px;
+  }
+
+  .world-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .tech-tree-overlay {
+    padding: 10px;
+  }
+
+  .tech-tree-panel {
+    max-height: calc(100vh - 20px);
+    padding: 12px;
+  }
+
+  .tech-tree-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tech-tree-map {
+    gap: 18px 28px;
+    padding: 22px;
+  }
+
+  .tech-tree-links {
+    inset: 22px;
+    width: calc(100% - 44px);
+    height: calc(100% - 44px);
+  }
+
+  .tech-node {
+    width: 144px;
+  }
+
+  .tech-detail-list div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

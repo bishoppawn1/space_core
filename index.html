@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Space Core - Ship Construction</title>
+    <link rel="stylesheet" href="./styles/base.css" />
+    <link rel="stylesheet" href="./styles/layout.css" />
+    <link rel="stylesheet" href="./styles/controls.css" />
+    <link rel="stylesheet" href="./styles/board.css" />
+    <link rel="stylesheet" href="./styles/tiles.css" />
+    <link rel="stylesheet" href="./styles/inspector.css" />
+    <link rel="stylesheet" href="./styles/world.css" />
+    <link rel="stylesheet" href="./styles/responsive.css" />
+  </head>
+  <body>
+    <main class="app-shell" id="construction-view">
+      <aside class="construction-panel" aria-label="Ship construction menu">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Build Bay</p>
+            <h1>Ship Construction</h1>
+          </div>
+          <button class="icon-button" id="rotate-button" type="button" title="Rotate selected block">
+            <span class="keycap">R</span>
+          </button>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Tile layers">
+          <button class="tab active" type="button" data-filter="all">All</button>
+          <button class="tab" type="button" data-filter="base">Base</button>
+          <button class="tab" type="button" data-filter="block">Block</button>
+          <button class="tab" type="button" data-filter="underlay">Underlay</button>
+        </div>
+
+        <section class="tile-palette" id="tile-palette" aria-label="Available tiles"></section>
+      </aside>
+
+      <section class="build-stage" aria-label="Ship grid">
+        <div class="stage-toolbar">
+          <div class="resource-strip" aria-label="Ship resources">
+            <span><strong id="scrap-value">260</strong> scrap</span>
+            <span><strong id="power-value">0</strong> power</span>
+            <span><strong id="mass-value">1</strong> mass</span>
+          </div>
+          <div class="toolbar-actions">
+            <button class="tool-button" id="erase-button" type="button" title="Remove top tile">
+              <span class="tool-icon erase-icon" aria-hidden="true"></span>
+            </button>
+            <button class="tool-button" id="clear-button" type="button" title="Reset ship">
+              <span class="tool-icon reset-icon" aria-hidden="true"></span>
+            </button>
+            <button class="primary-button research-button" id="research-button" type="button">Research</button>
+            <button class="primary-button save-button" id="save-button" type="button">Save &amp; Quit</button>
+            <button class="primary-button" id="done-button" type="button">Done</button>
+          </div>
+        </div>
+
+        <div class="board-frame">
+          <div class="board" id="board" aria-label="Construction grid"></div>
+        </div>
+
+        <div class="status-bar" id="status-bar" role="status">Scaffold selected.</div>
+      </section>
+
+      <aside class="inspector" aria-label="Selected tile">
+        <div class="selected-tile">
+          <div class="tile-preview large" id="selected-preview"></div>
+          <div>
+            <p class="eyebrow" id="selected-layer">Base</p>
+            <h2 id="selected-name">Ship Scaffold</h2>
+          </div>
+        </div>
+
+        <dl class="detail-list">
+          <div>
+            <dt>Inventory</dt>
+            <dd id="selected-cost">5 scrap</dd>
+          </div>
+          <div>
+            <dt>Placement</dt>
+            <dd id="selected-placement">Connects to core or scaffold.</dd>
+          </div>
+          <div>
+            <dt>Output</dt>
+            <dd id="selected-output">Supports blocks.</dd>
+          </div>
+        </dl>
+
+        <section class="ship-readout" aria-label="Ship readout">
+          <h2>Ship Readout</h2>
+          <div class="readout-grid">
+            <div>
+              <span id="scaffold-count">0</span>
+              <label>scaffold</label>
+            </div>
+            <div>
+              <span id="generator-count">0</span>
+              <label>generators</label>
+            </div>
+            <div>
+              <span id="powered-count">0</span>
+              <label>powered</label>
+            </div>
+            <div>
+              <span id="weapon-count">0</span>
+              <label>weapons</label>
+            </div>
+          </div>
+        </section>
+
+      </aside>
+
+      <section class="tech-tree-overlay hidden" id="tech-tree-overlay" aria-label="Research tech tree" aria-modal="true" role="dialog">
+        <div class="tech-tree-panel">
+          <div class="tech-tree-header">
+            <div>
+              <p class="eyebrow">Research</p>
+              <h2>Tech Tree</h2>
+            </div>
+            <button class="tool-button" id="close-tech-tree-button" type="button" title="Close tech tree">
+              <span class="tool-icon erase-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="tech-tree-resource">
+            <span><strong id="tech-tree-scrap-value">260</strong> scrap</span>
+          </div>
+          <div class="tech-tree-tabs" id="tech-tree-tabs" role="tablist" aria-label="Research sections"></div>
+          <div class="tech-tree-grid" id="tech-tree-grid"></div>
+        </div>
+      </section>
+    </main>
+
+    <main class="world-shell hidden" id="world-view">
+      <section class="world-stage" aria-label="Main world">
+        <div class="world-toolbar">
+          <div>
+            <p class="eyebrow">Main World</p>
+            <h1>Debris Field</h1>
+          </div>
+          <div class="resource-strip" aria-label="World resources">
+            <span><strong id="world-scrap-value">260</strong> scrap</span>
+            <span><strong id="world-cargo-value">0</strong> cargo</span>
+            <span><strong id="world-range-value">0</strong> reach</span>
+            <span><strong id="world-speed-value">0</strong> speed</span>
+          </div>
+          <div class="toolbar-actions">
+            <button class="tool-button" id="zoom-out-button" type="button" title="Zoom out" aria-label="Zoom out">
+              <span class="zoom-symbol" aria-hidden="true">-</span>
+            </button>
+            <button class="tool-button" id="zoom-in-button" type="button" title="Zoom in" aria-label="Zoom in">
+              <span class="zoom-symbol" aria-hidden="true">+</span>
+            </button>
+            <button class="primary-button trade-button hidden" id="trade-button" type="button">Trade</button>
+            <button class="primary-button" id="build-button" type="button">Build</button>
+          </div>
+        </div>
+
+        <div class="world-map" id="world-map" aria-label="World map"></div>
+        <div class="status-bar" id="world-status" role="status">Ship ready.</div>
+      </section>
+
+      <aside class="world-panel" aria-label="World inventory">
+        <section class="ship-readout">
+          <h2>Commands</h2>
+          <div class="readout-grid">
+            <div>
+              <span id="selected-engines-count">0</span>
+              <label>engines</label>
+            </div>
+            <div>
+              <span id="active-engines-count">0</span>
+              <label>active</label>
+            </div>
+            <div>
+              <span id="selected-weapons-count">0</span>
+              <label>weapons</label>
+            </div>
+            <div>
+              <span id="enemy-core-status">online</span>
+              <label>enemy cores</label>
+            </div>
+          </div>
+          <div class="command-row">
+            <button class="primary-button" id="engine-on-button" type="button">On</button>
+            <button class="primary-button" id="engine-off-button" type="button">Off</button>
+            <button class="tool-button" id="clear-selection-button" type="button" title="Clear selection">
+              <span class="tool-icon erase-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+        </section>
+
+        <section class="ship-readout">
+          <h2>Multiplayer</h2>
+          <div class="multiplayer-readout">
+            <span id="multiplayer-status">Solo</span>
+            <label id="multiplayer-count">0 connected</label>
+          </div>
+          <div class="share-readout">
+            <span>Friend link</span>
+            <code id="share-url">checking...</code>
+          </div>
+          <div class="command-row">
+            <button class="primary-button" id="host-button" type="button">Create</button>
+            <button class="primary-button" id="join-button" type="button">Join</button>
+            <button class="tool-button" id="leave-button" type="button" title="Leave multiplayer">
+              <span class="tool-icon reset-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+        </section>
+
+        <section class="ship-readout">
+          <h2>Cargo</h2>
+          <div class="inventory-list compact" id="world-inventory-list"></div>
+        </section>
+      </aside>
+
+      <section class="trade-overlay hidden" id="trade-overlay" aria-label="Trader exchange" aria-modal="true" role="dialog">
+        <div class="trade-panel">
+          <header class="trade-header">
+            <div>
+              <p class="eyebrow" id="trade-subtitle">Trader ship</p>
+              <h2 id="trade-title">Trade</h2>
+            </div>
+            <button class="tool-button" id="close-trade-button" type="button" title="Close trade">
+              <span class="tool-icon erase-icon" aria-hidden="true"></span>
+            </button>
+          </header>
+          <div class="trade-body">
+            <aside class="trade-cargo">
+              <h3>Your Pieces</h3>
+              <div class="trade-cargo-list" id="trade-cargo-list"></div>
+            </aside>
+            <section class="trade-stock">
+              <div class="trade-stock-header">
+                <h3>Trader Stock</h3>
+                <div class="trade-stock-actions">
+                  <button class="mini-action" id="trade-refresh-button" type="button">Refresh</button>
+                  <span><strong id="trade-scrap-value">260</strong> scrap</span>
+                </div>
+              </div>
+              <div class="trade-stock-grid" id="trade-stock-grid"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./js/config.js" defer></script>
+    <script src="./js/tileState.js" defer></script>
+    <script src="./js/tiles.js" defer></script>
+    <script src="./js/board.js" defer></script>
+    <script src="./js/placement.js" defer></script>
+    <script src="./js/power.js" defer></script>
+    <script src="./js/dom.js" defer></script>
+    <script src="./js/tileViews.js" defer></script>
+    <script src="./js/renderers.js" defer></script>
+    <script src="./js/world.js" defer></script>
+    <script src="./js/multiplayer.js" defer></script>
+    <script src="./js/app.js" defer></script>
+  </body>
+</html>
