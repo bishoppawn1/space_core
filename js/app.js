@@ -172,6 +172,14 @@
   }
 
   function validateCell(x, y) {
+    const cell = getCell(state.board, x, y);
+
+    if (state.eraseMode && cell?.base?.id === "ship-scaffold" && !cell.block && !cell.underlay) {
+      if (wouldDisconnectScaffoldFromCore(cell)) {
+        return { ok: false, message: "You need to deconstruct the other thing first." };
+      }
+    }
+
     const tile = getSelectedTile();
 
     if (isTileResearchLocked(tile)) {
@@ -247,9 +255,13 @@
       cell.underlay = null;
       setStatus(dom, "Underlay removed.", "warn");
     } else if (cell.base?.id === "ship-scaffold") {
-      returnTileToInventory(cell.base.id);
-      cell.base = null;
-      setStatus(dom, "Scaffold removed.", "warn");
+      if (wouldDisconnectScaffoldFromCore(cell)) {
+        setStatus(dom, "You need to deconstruct the other thing first.", "bad");
+      } else {
+        returnTileToInventory(cell.base.id);
+        cell.base = null;
+        setStatus(dom, "Scaffold removed.", "warn");
+      }
     } else {
       setStatus(dom, "Core cannot be removed.", "bad");
     }
@@ -261,6 +273,63 @@
 
   function returnTileToInventory(tileId) {
     state.inventory[tileId] = (state.inventory[tileId] ?? 0) + 1;
+  }
+
+  function wouldDisconnectScaffoldFromCore(removedCell) {
+    const reachable = new Set();
+    const queue = [];
+    const coreCell = getCell(state.board, spaceCore.config.CORE_X, spaceCore.config.CORE_Y);
+
+    if (hasConnectedBaseForErase(coreCell, removedCell)) {
+      queue.push(coreCell);
+      reachable.add(getCellKey(coreCell));
+    }
+
+    while (queue.length > 0) {
+      const cell = queue.shift();
+
+      for (const neighbor of getBaseNeighborsForErase(cell, removedCell)) {
+        const key = getCellKey(neighbor);
+
+        if (reachable.has(key)) {
+          continue;
+        }
+
+        reachable.add(key);
+        queue.push(neighbor);
+      }
+    }
+
+    for (const row of state.board) {
+      for (const cell of row) {
+        if (cell === removedCell || !cell.base) {
+          continue;
+        }
+
+        if (!reachable.has(getCellKey(cell))) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  function getBaseNeighborsForErase(cell, removedCell) {
+    return [
+      getCell(state.board, cell.x, cell.y - 1),
+      getCell(state.board, cell.x + 1, cell.y),
+      getCell(state.board, cell.x, cell.y + 1),
+      getCell(state.board, cell.x - 1, cell.y),
+    ].filter((neighbor) => hasConnectedBaseForErase(neighbor, removedCell));
+  }
+
+  function hasConnectedBaseForErase(cell, removedCell) {
+    return Boolean(cell && cell !== removedCell && cell.base);
+  }
+
+  function getCellKey(cell) {
+    return `${cell.x},${cell.y}`;
   }
 
   function showPowerGeneratorSystem(cell) {

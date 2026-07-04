@@ -38,3 +38,24 @@ test("construction supports placement, rotation, erasing, and power readouts", a
 
   await browser.expectNoBrowserErrors();
 });
+
+test("construction prevents removing scaffold that would disconnect the hull from the core", async ({ page }) => {
+  const browser = await openGame(page);
+  const { coreX, coreY } = await coreConfig(page);
+
+  await api(page, "placeTile", "ship-scaffold", coreX + 1, coreY);
+  await api(page, "placeTile", "ship-scaffold", coreX + 2, coreY);
+
+  const blocked = await api(page, "eraseCell", coreX + 1, coreY);
+  expect(blocked.statuses.construction).toBe("You need to deconstruct the other thing first.");
+  expect((await api(page, "cellAt", coreX + 1, coreY)).base.id).toBe("ship-scaffold");
+  expect((await api(page, "cellAt", coreX + 2, coreY)).base.id).toBe("ship-scaffold");
+
+  await api(page, "eraseCell", coreX + 2, coreY);
+  expect((await api(page, "cellAt", coreX + 2, coreY)).base).toBeNull();
+
+  await api(page, "eraseCell", coreX + 1, coreY);
+  expect((await api(page, "cellAt", coreX + 1, coreY)).base).toBeNull();
+
+  await browser.expectNoBrowserErrors();
+});

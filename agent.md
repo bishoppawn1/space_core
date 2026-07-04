@@ -124,6 +124,7 @@ Blocks cannot overlap other blocks. Underlays can sit underneath bases or blocks
 - Playwright-based autonomous browser tests cover deterministic construction, world controls, weapon retargeting, trade/research, and core support systems without manual playtesting.
 - New players see a first-run tutorial with basics for building, power, movement, combat, salvage, trade, and research. Completing or skipping it opens a main menu.
 - The main menu can start the single-player game. Public multiplayer, private multiplayer, and new server options are visible placeholders.
+- Scaffold removal now preserves direct base connectivity to the core; players must deconstruct outward pieces first if removing a scaffold would orphan part of the hull.
 
 ## Current Controls
 
@@ -187,6 +188,7 @@ Blocks cannot overlap other blocks. Underlays can sit underneath bases or blocks
 - Rebuilt enemy and trader ship templates again so cannons have directed ammo routes, weapons sit on connected hulls, front-facing weapons are not blocked by their own parts, and all tested templates have enough power.
 - Added an opt-in `?test=1` game harness plus Playwright tests for construction placement/power, launch and engine controls, weapon retargeting, trader exchange/research, ammo routing, repair bots, shield recharge, and salvage collectors.
 - Added a first-run tutorial, skip path, main menu, single-player start button, and placeholder public/private/server multiplayer buttons.
+- Prevented scaffold deletion from leaving disconnected hull islands and added an autonomous regression test for the blocked deconstruction message.
 
 ## Known Issues And Risks
 
