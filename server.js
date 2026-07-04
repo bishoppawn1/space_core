@@ -81,9 +81,9 @@ const server = http.createServer((request, response) => {
 });
 
 const multiplayerClients = new Map();
+const multiplayerRooms = new Map();
+const DEFAULT_ROOM_ID = "PUBLIC";
 let nextClientId = 1;
-let hostClientId = null;
-let sharedWorldState = null;
 
 function sendJson(clientOrSocket, data) {
   const socket = clientOrSocket.socket ?? clientOrSocket;
@@ -127,23 +127,32 @@ function sendJson(clientOrSocket, data) {
   return true;
 }
 
-function broadcastJson(data, exceptClientId = null) {
-  for (const client of multiplayerClients.values()) {
-    if (client.id !== exceptClientId) {
+function broadcastJson(room, data, exceptClientId = null) {
+  for (const clientId of room?.clients ?? []) {
+    const client = multiplayerClients.get(clientId);
+
+    if (client?.ready && client.id !== exceptClientId) {
       sendJson(client, data);
     }
   }
 }
 
-function sendPeerCount() {
-  broadcastJson({
+function sendPeerCount(room) {
+  if (!room) {
+    return;
+  }
+
+  broadcastJson(room, {
     type: "peer-count",
-    count: multiplayerClients.size,
+    roomId: room.id,
+    count: room.clients.size,
   });
 }
 
-function getPlayerStates(exceptClientId = null) {
-  return [...multiplayerClients.values()]
+function getPlayerStates(room, exceptClientId = null) {
+  return [...(room?.clients ?? [])]
+    .map((clientId) => multiplayerClients.get(clientId))
+    .filter(Boolean)
     .filter((client) => client.id !== exceptClientId && client.playerState)
     .map((client) => ({
       id: client.id,
@@ -151,8 +160,156 @@ function getPlayerStates(exceptClientId = null) {
     }));
 }
 
-function getHostClient() {
-  return hostClientId ? multiplayerClients.get(hostClientId) : null;
+function getClientRoom(client) {
+  return client?.roomId ? multiplayerRooms.get(client.roomId) ?? null : null;
+}
+
+function getHostClient(room) {
+  return room?.hostClientId ? multiplayerClients.get(room.hostClientId) : null;
+}
+
+function getRoomClient(room, clientId) {
+  const client = multiplayerClients.get(clientId);
+  return client && room?.clients.has(client.id) ? client : null;
+}
+
+function getOrCreateRoom(roomId = DEFAULT_ROOM_ID) {
+  const id = normalizeRoomId(roomId) || DEFAULT_ROOM_ID;
+  let room = multiplayerRooms.get(id);
+
+  if (!room) {
+    room = {
+      id,
+      hostClientId: null,
+      sharedWorldState: null,
+      clients: new Set(),
+    };
+    multiplayerRooms.set(id, room);
+  }
+
+  return room;
+}
+
+function createPrivateRoom() {
+  let roomId = "";
+
+  do {
+    roomId = crypto.randomBytes(3).toString("hex").toUpperCase();
+  } while (multiplayerRooms.has(roomId));
+
+  return getOrCreateRoom(roomId);
+}
+
+function normalizeRoomId(roomId) {
+  return String(roomId ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
+}
+
+function leaveRoom(client, options = {}) {
+  const room = getClientRoom(client);
+
+  if (!room) {
+    client.roomId = null;
+    client.ready = false;
+    client.isHost = false;
+    return;
+  }
+
+  const wasHost = room.hostClientId === client.id;
+  room.clients.delete(client.id);
+  client.roomId = null;
+  client.ready = false;
+  client.isHost = false;
+  client.playerState = null;
+
+  if (wasHost) {
+    for (const remainingClientId of room.clients) {
+      const remainingClient = multiplayerClients.get(remainingClientId);
+
+      if (!remainingClient) {
+        continue;
+      }
+
+      remainingClient.roomId = null;
+      remainingClient.ready = false;
+      remainingClient.isHost = false;
+      sendJson(remainingClient, {
+        type: "host-left",
+        id: client.id,
+        roomId: room.id,
+      });
+    }
+
+    room.clients.clear();
+    multiplayerRooms.delete(room.id);
+    return;
+  }
+
+  if (!options.silent) {
+    broadcastJson(room, { type: "player-left", id: client.id, roomId: room.id }, client.id);
+    sendPeerCount(room);
+  }
+}
+
+function joinRoomAsHost(client, room, options = {}) {
+  const currentRoom = getClientRoom(client);
+
+  if (currentRoom && currentRoom.id !== room.id) {
+    leaveRoom(client);
+  }
+
+  client.ready = true;
+  client.isHost = true;
+  client.roomId = room.id;
+  room.hostClientId = client.id;
+  room.clients.add(client.id);
+
+  sendJson(client, {
+    type: "hosted",
+    id: client.id,
+    roomId: room.id,
+    private: Boolean(options.private),
+  });
+  sendJson(client, {
+    type: "joined",
+    id: client.id,
+    hostId: room.hostClientId,
+    roomId: room.id,
+    players: getPlayerStates(room, client.id),
+    worldState: room.sharedWorldState,
+  });
+  sendPeerCount(room);
+}
+
+function joinRoomAsGuest(client, room) {
+  const currentRoom = getClientRoom(client);
+
+  if (currentRoom && currentRoom.id !== room.id) {
+    leaveRoom(client);
+  }
+
+  if (room.hostClientId === client.id) {
+    room.hostClientId = null;
+    room.sharedWorldState = null;
+  }
+
+  client.ready = true;
+  client.isHost = false;
+  client.roomId = room.id;
+  room.clients.add(client.id);
+
+  sendJson(client, {
+    type: "joined",
+    id: client.id,
+    hostId: room.hostClientId,
+    roomId: room.id,
+    players: getPlayerStates(room, client.id),
+    worldState: room.sharedWorldState,
+  });
+  sendPeerCount(room);
 }
 
 function cleanupMultiplayerClient(client) {
@@ -160,86 +317,76 @@ function cleanupMultiplayerClient(client) {
     return;
   }
 
-  const wasHost = client.id === hostClientId;
+  leaveRoom(client);
   multiplayerClients.delete(client.id);
-
-  if (wasHost) {
-    hostClientId = null;
-    sharedWorldState = null;
-    broadcastJson({ type: "host-left", id: client.id });
-  }
-
-  broadcastJson({ type: "player-left", id: client.id });
-  sendPeerCount();
 }
 
 function handleMultiplayerMessage(client, message) {
+  if (message.type === "create-room") {
+    joinRoomAsHost(client, createPrivateRoom(), { private: true });
+    return;
+  }
+
   if (message.type === "host-start") {
-    if (hostClientId && hostClientId !== client.id && getHostClient()) {
-      client.ready = true;
-      client.isHost = false;
-      sendJson(client, {
-        type: "joined",
-        id: client.id,
-        hostId: hostClientId,
-        players: getPlayerStates(client.id),
-        worldState: sharedWorldState,
-      });
-      sendPeerCount();
+    const room = getOrCreateRoom(message.roomId || DEFAULT_ROOM_ID);
+    const host = getHostClient(room);
+
+    if (host && host.id !== client.id) {
+      joinRoomAsGuest(client, room);
       return;
     }
 
-    hostClientId = client.id;
-    client.ready = true;
-    client.isHost = true;
-    sendJson(client, {
-      type: "hosted",
-      id: client.id,
-    });
-    sendJson(client, {
-      type: "joined",
-      id: client.id,
-      hostId: hostClientId,
-      players: getPlayerStates(client.id),
-      worldState: sharedWorldState,
-    });
-    sendPeerCount();
+    joinRoomAsHost(client, room);
+    return;
+  }
+
+  if (message.type === "join-room") {
+    const roomId = normalizeRoomId(message.roomId);
+    const room = roomId ? multiplayerRooms.get(roomId) : null;
+
+    if (!room || !getHostClient(room)) {
+      sendJson(client, {
+        type: "error",
+        message: "Private room not found.",
+        roomId,
+      });
+      return;
+    }
+
+    joinRoomAsGuest(client, room);
     return;
   }
 
   if (message.type === "join") {
-    client.ready = true;
-    sendJson(client, {
-      type: "joined",
-      id: client.id,
-      hostId: hostClientId,
-      players: getPlayerStates(client.id),
-      worldState: sharedWorldState,
-    });
-    sendPeerCount();
+    joinRoomAsGuest(client, getOrCreateRoom(DEFAULT_ROOM_ID));
     return;
   }
 
   if (message.type === "world-state") {
-    if (!client.ready || client.id !== hostClientId) {
+    const room = getClientRoom(client);
+
+    if (!client.ready || !room || client.id !== room.hostClientId) {
       return;
     }
 
-    sharedWorldState = message.worldState ?? null;
-    broadcastJson({
+    room.sharedWorldState = message.worldState ?? null;
+    broadcastJson(room, {
       type: "world-state",
-      hostId: hostClientId,
-      worldState: sharedWorldState,
+      hostId: room.hostClientId,
+      roomId: room.id,
+      worldState: room.sharedWorldState,
     }, client.id);
     return;
   }
 
   if (message.type === "grant-pieces") {
-    if (!client.ready || client.id !== hostClientId) {
+    const room = getClientRoom(client);
+
+    if (!client.ready || !room || client.id !== room.hostClientId) {
       return;
     }
 
-    const target = multiplayerClients.get(message.targetId);
+    const target = getRoomClient(room, message.targetId);
 
     if (target?.ready) {
       sendJson(target, {
@@ -257,15 +404,22 @@ function handleMultiplayerMessage(client, message) {
       return;
     }
 
+    const room = getClientRoom(client);
     const snapshot = message.snapshot ?? {};
     client.playerState = {
       body: snapshot.world?.ship ?? snapshot.body,
       board: snapshot.board ?? [],
       activeEngineIds: snapshot.activeEngineIds ?? [],
     };
-    broadcastJson({
+
+    if (!room) {
+      return;
+    }
+
+    broadcastJson(room, {
       type: "player-state",
       playerId: client.id,
+      roomId: room.id,
       state: client.playerState,
     }, client.id);
     return;
@@ -276,17 +430,25 @@ function handleMultiplayerMessage(client, message) {
       return;
     }
 
+    const room = getClientRoom(client);
     client.playerState = message.state;
-    broadcastJson({
+
+    if (!room) {
+      return;
+    }
+
+    broadcastJson(room, {
       type: "player-state",
       playerId: client.id,
+      roomId: room.id,
       state: client.playerState,
     }, client.id);
     return;
   }
 
   if (message.type === "damage-player") {
-    const target = multiplayerClients.get(message.targetId);
+    const room = getClientRoom(client);
+    const target = getRoomClient(room, message.targetId);
 
     if (target?.ready) {
       sendJson(target, {
@@ -298,11 +460,13 @@ function handleMultiplayerMessage(client, message) {
   }
 
   if (message.type === "trade-buy-request") {
-    if (!client.ready || client.id === hostClientId) {
+    const room = getClientRoom(client);
+
+    if (!client.ready || !room || client.id === room.hostClientId) {
       return;
     }
 
-    const host = getHostClient();
+    const host = getHostClient(room);
 
     if (host?.ready) {
       sendJson(host, {
@@ -319,11 +483,13 @@ function handleMultiplayerMessage(client, message) {
   }
 
   if (message.type === "trade-buy-result") {
-    if (!client.ready || client.id !== hostClientId) {
+    const room = getClientRoom(client);
+
+    if (!client.ready || !room || client.id !== room.hostClientId) {
       return;
     }
 
-    const target = multiplayerClients.get(message.targetId);
+    const target = getRoomClient(room, message.targetId);
 
     if (target?.ready) {
       sendJson(target, {
@@ -341,11 +507,13 @@ function handleMultiplayerMessage(client, message) {
   }
 
   if (message.type === "trade-refresh-request") {
-    if (!client.ready || client.id === hostClientId) {
+    const room = getClientRoom(client);
+
+    if (!client.ready || !room || client.id === room.hostClientId) {
       return;
     }
 
-    const host = getHostClient();
+    const host = getHostClient(room);
 
     if (host?.ready) {
       sendJson(host, {
@@ -361,11 +529,13 @@ function handleMultiplayerMessage(client, message) {
   }
 
   if (message.type === "trade-refresh-result") {
-    if (!client.ready || client.id !== hostClientId) {
+    const room = getClientRoom(client);
+
+    if (!client.ready || !room || client.id !== room.hostClientId) {
       return;
     }
 
-    const target = multiplayerClients.get(message.targetId);
+    const target = getRoomClient(room, message.targetId);
 
     if (target?.ready) {
       sendJson(target, {
@@ -384,11 +554,13 @@ function handleMultiplayerMessage(client, message) {
   }
 
   if (message.type === "trade-sell-request") {
-    if (!client.ready || client.id === hostClientId) {
+    const room = getClientRoom(client);
+
+    if (!client.ready || !room || client.id === room.hostClientId) {
       return;
     }
 
-    const host = getHostClient();
+    const host = getHostClient(room);
 
     if (host?.ready) {
       sendJson(host, {
@@ -406,11 +578,13 @@ function handleMultiplayerMessage(client, message) {
   }
 
   if (message.type === "trade-sell-result") {
-    if (!client.ready || client.id !== hostClientId) {
+    const room = getClientRoom(client);
+
+    if (!client.ready || !room || client.id !== room.hostClientId) {
       return;
     }
 
-    const target = multiplayerClients.get(message.targetId);
+    const target = getRoomClient(room, message.targetId);
 
     if (target?.ready) {
       sendJson(target, {
@@ -436,6 +610,7 @@ function readWebSocketFrames(client, chunk) {
   while (client.buffer.length >= 2) {
     const firstByte = client.buffer[0];
     const secondByte = client.buffer[1];
+    const finished = Boolean(firstByte & 0x80);
     const opcode = firstByte & 0x0f;
     const masked = Boolean(secondByte & 0x80);
     let length = secondByte & 0x7f;
@@ -478,15 +653,40 @@ function readWebSocketFrames(client, chunk) {
       return;
     }
 
+    if (opcode === 0x0) {
+      if (!client.fragments) {
+        continue;
+      }
+
+      client.fragments.push(payload);
+
+      if (finished) {
+        handleWebSocketTextMessage(client, Buffer.concat(client.fragments));
+        client.fragments = null;
+      }
+
+      continue;
+    }
+
     if (opcode !== 0x1) {
       continue;
     }
 
-    try {
-      handleMultiplayerMessage(client, JSON.parse(payload.toString("utf8")));
-    } catch (error) {
-      sendJson(client, { type: "error", message: "Bad multiplayer message." });
+    if (!finished) {
+      client.fragments = [payload];
+      continue;
     }
+
+    handleWebSocketTextMessage(client, payload);
+  }
+}
+
+function handleWebSocketTextMessage(client, payload) {
+  try {
+    handleMultiplayerMessage(client, JSON.parse(payload.toString("utf8")));
+  } catch (error) {
+    console.error("Bad multiplayer message:", error.message);
+    sendJson(client, { type: "error", message: "Bad multiplayer message." });
   }
 }
 
@@ -528,6 +728,7 @@ server.on("upgrade", (request, socket) => {
     id: nextClientId,
     socket,
     buffer: Buffer.alloc(0),
+    fragments: null,
     ready: false,
     playerState: null,
   };

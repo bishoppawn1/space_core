@@ -21,9 +21,8 @@ test("tutorial can be skipped or completed before starting single player from th
   await page.locator("#join-public-server-button").click();
   await expect(page.locator("#main-menu-status")).toContainText("Public multiplayer is coming soon");
   await page.locator("#join-private-server-button").click();
-  await expect(page.locator("#main-menu-status")).toContainText("Private multiplayer is coming soon");
-  await page.locator("#start-new-server-button").click();
-  await expect(page.locator("#main-menu-status")).toContainText("Server hosting is coming soon");
+  await expect(page.locator("#private-room-panel")).toBeVisible();
+  await expect(page.locator("#main-menu-status")).toContainText("Enter a private room code");
 
   await page.locator("#start-single-player-button").click();
   await expect(page.locator("#construction-view")).toBeVisible();

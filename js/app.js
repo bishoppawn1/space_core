@@ -150,6 +150,7 @@
       connected: false,
       clientId: null,
       hostId: null,
+      roomId: null,
       role: "solo",
       isHost: false,
       peerCount: 0,
@@ -166,6 +167,7 @@
   let multiplayerClient = null;
   let multiplayerConnectionToken = 0;
   let nextWeaponOrderId = 1;
+  let defaultShareUrlText = window.location.origin;
 
   function getSelectedTile() {
     return findTileById(state.selectedTileId);
@@ -1538,13 +1540,15 @@
     connectMultiplayer({ asHost: false });
   }
 
-  function connectMultiplayer({ asHost }) {
+  function connectMultiplayer({ asHost, roomId = null, createRoom = false }) {
     leaveMultiplayer(false);
     const connectionToken = multiplayerConnectionToken + 1;
+    const normalizedRoomId = normalizeRoomCode(roomId);
     multiplayerConnectionToken = connectionToken;
     state.multiplayer.role = asHost ? "host" : "guest";
     state.multiplayer.isHost = false;
     state.multiplayer.hostId = null;
+    state.multiplayer.roomId = normalizedRoomId || null;
     state.multiplayer.connected = false;
     state.multiplayer.peerCount = 0;
     state.multiplayer.worldSynced = asHost;
@@ -1558,7 +1562,7 @@
     }
 
     syncMultiplayerControls();
-    setWorldStatus(asHost ? "Creating shared map..." : "Connecting to shared map...", "");
+    setWorldStatus(getConnectingMessage({ asHost, createRoom, roomId: normalizedRoomId }), "");
 
     multiplayerClient = createMultiplayerClient({
       onOpen: () => {
@@ -1567,7 +1571,7 @@
         }
 
         state.multiplayer.connected = true;
-        multiplayerClient.send({ type: asHost ? "host-start" : "join" });
+        multiplayerClient.send(getMultiplayerStartMessage({ asHost, createRoom, roomId: normalizedRoomId }));
         syncMultiplayerControls();
       },
       onClose: () => {
@@ -1579,6 +1583,7 @@
         state.multiplayer.connected = false;
         state.multiplayer.clientId = null;
         state.multiplayer.hostId = null;
+        state.multiplayer.roomId = null;
         state.multiplayer.role = "solo";
         state.multiplayer.isHost = false;
         state.multiplayer.peerCount = 0;
@@ -1600,6 +1605,50 @@
     multiplayerClient.connect();
   }
 
+  function getConnectingMessage({ asHost, createRoom, roomId }) {
+    if (createRoom) {
+      return "Creating private room...";
+    }
+
+    if (roomId) {
+      return `Joining private room ${roomId}...`;
+    }
+
+    return asHost ? "Creating shared map..." : "Connecting to shared map...";
+  }
+
+  function getMultiplayerStartMessage({ asHost, createRoom, roomId }) {
+    if (createRoom) {
+      return { type: "create-room" };
+    }
+
+    if (!asHost && roomId) {
+      return { type: "join-room", roomId };
+    }
+
+    if (asHost) {
+      return roomId ? { type: "host-start", roomId } : { type: "host-start" };
+    }
+
+    return { type: "join" };
+  }
+
+  function getHostedStatusMessage() {
+    return state.multiplayer.roomId && state.multiplayer.roomId !== "PUBLIC"
+      ? `Hosting private room ${state.multiplayer.roomId}.`
+      : "Hosting shared map.";
+  }
+
+  function getJoinedStatusMessage() {
+    const roomText = state.multiplayer.roomId && state.multiplayer.roomId !== "PUBLIC"
+      ? `private room ${state.multiplayer.roomId}`
+      : "shared map";
+
+    return state.multiplayer.worldSynced
+      ? `Connected to ${roomText}.`
+      : `Connected to ${roomText}. Waiting for host map.`;
+  }
+
   function leaveMultiplayer(showStatus = true) {
     multiplayerConnectionToken += 1;
 
@@ -1612,6 +1661,7 @@
     state.multiplayer.connected = false;
     state.multiplayer.clientId = null;
     state.multiplayer.hostId = null;
+    state.multiplayer.roomId = null;
     state.multiplayer.role = "solo";
     state.multiplayer.isHost = false;
     state.multiplayer.peerCount = 0;
@@ -1638,11 +1688,12 @@
       state.multiplayer.connected = true;
       state.multiplayer.clientId = message.id;
       state.multiplayer.hostId = message.id;
+      state.multiplayer.roomId = message.roomId ?? state.multiplayer.roomId;
       state.multiplayer.isHost = true;
       state.multiplayer.role = "host";
       state.multiplayer.worldSynced = true;
       state.multiplayer.sharedWorldRenderKey = getSharedWorldRenderKey(state.world);
-      setWorldStatus("Hosting shared map.", "good");
+      setWorldStatus(getHostedStatusMessage(), "good");
       syncMultiplayerControls();
       sendSharedWorldSnapshot(performance.now(), true);
       return;
@@ -1652,6 +1703,7 @@
       state.multiplayer.connected = true;
       state.multiplayer.clientId = message.id;
       state.multiplayer.hostId = message.hostId ?? null;
+      state.multiplayer.roomId = message.roomId ?? state.multiplayer.roomId;
       state.multiplayer.isHost = state.multiplayer.hostId === state.multiplayer.clientId && state.multiplayer.role === "host";
       state.multiplayer.role = state.multiplayer.isHost ? "host" : "guest";
       state.multiplayer.worldSynced = state.multiplayer.isHost;
@@ -1664,10 +1716,10 @@
       }
 
       if (state.multiplayer.isHost) {
-        setWorldStatus("Hosting shared map.", "good");
+        setWorldStatus(getHostedStatusMessage(), "good");
       } else if (state.multiplayer.hostId) {
         setWorldStatus(
-          state.multiplayer.worldSynced ? "Connected to shared map." : "Connected. Waiting for host map.",
+          getJoinedStatusMessage(),
           state.multiplayer.worldSynced ? "good" : "warn",
         );
       } else {
@@ -1683,6 +1735,10 @@
     }
 
     if (message.type === "peer-count") {
+      if (message.roomId && state.multiplayer.roomId && message.roomId !== state.multiplayer.roomId) {
+        return;
+      }
+
       state.multiplayer.peerCount = message.count ?? 0;
       syncMultiplayerControls();
       return;
@@ -1702,6 +1758,7 @@
     if (message.type === "world-state") {
       if (!isMultiplayerHost()) {
         state.multiplayer.hostId = message.hostId ?? state.multiplayer.hostId;
+        state.multiplayer.roomId = message.roomId ?? state.multiplayer.roomId;
         const previousRenderKey = state.multiplayer.sharedWorldRenderKey;
         applySharedWorldSnapshot(state.world, message.worldState);
         state.multiplayer.worldSynced = true;
@@ -1719,6 +1776,11 @@
     if (message.type === "host-left") {
       if (!isMultiplayerHost()) {
         state.multiplayer.hostId = null;
+        state.multiplayer.roomId = null;
+        state.multiplayer.connected = false;
+        state.multiplayer.role = "solo";
+        state.multiplayer.isHost = false;
+        state.multiplayer.peerCount = 0;
         state.multiplayer.worldSynced = false;
         clearSharedWorldState(state.world);
         state.multiplayer.sharedWorldRenderKey = getSharedWorldRenderKey(state.world);
@@ -1726,6 +1788,7 @@
         state.activeTraderId = null;
         state.pendingTradeSlots.clear();
         setWorldStatus("Host left. Shared map paused.", "warn");
+        syncMultiplayerControls();
         scheduleWorldRender();
       }
       return;
@@ -1772,11 +1835,19 @@
     }
 
     if (message.type === "error") {
+      const messageText = message.message ?? "Multiplayer error.";
+
+      if (messageText.includes("Private room")) {
+        leaveMultiplayer(false);
+        setWorldStatus(messageText, "bad");
+        return;
+      }
+
       if (state.multiplayer.role === "host" && !state.multiplayer.isHost) {
         state.multiplayer.role = state.multiplayer.hostId ? "guest" : "solo";
       }
 
-      setWorldStatus(message.message ?? "Multiplayer error.", "bad");
+      setWorldStatus(messageText, "bad");
     }
   }
 
@@ -2663,26 +2734,50 @@
 
   function syncMultiplayerControls() {
     dom.multiplayerStatus.textContent = state.multiplayer.connected
-      ? (state.multiplayer.isHost ? "Hosting" : "Connected")
+      ? getMultiplayerStatusLabel()
       : "Solo";
     dom.multiplayerCount.textContent = `${state.multiplayer.peerCount} connected`;
+    if (state.multiplayer.connected && state.multiplayer.roomId) {
+      dom.shareUrl.textContent = state.multiplayer.roomId === "PUBLIC"
+        ? "Public room"
+        : `Room ${state.multiplayer.roomId}`;
+    } else {
+      dom.shareUrl.textContent = defaultShareUrlText;
+    }
     dom.hostButton.disabled = state.multiplayer.connected;
     dom.joinButton.disabled = state.multiplayer.connected;
     dom.leaveButton.disabled = !state.multiplayer.connected;
+  }
+
+  function getMultiplayerStatusLabel() {
+    if (state.multiplayer.isHost) {
+      return state.multiplayer.roomId && state.multiplayer.roomId !== "PUBLIC"
+        ? `Hosting ${state.multiplayer.roomId}`
+        : "Hosting";
+    }
+
+    return state.multiplayer.roomId && state.multiplayer.roomId !== "PUBLIC"
+      ? `Joined ${state.multiplayer.roomId}`
+      : "Connected";
   }
 
   async function loadShareUrl() {
     try {
       const response = await fetch("./server-info.json", { cache: "no-store" });
       const info = await response.json();
+      if (state.multiplayer.connected && state.multiplayer.roomId) {
+        return;
+      }
       const isLocalHost = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
       const shareUrl = isLocalHost
         ? info.lanUrls?.[0] ?? info.localUrl ?? window.location.origin
         : window.location.origin;
 
-      dom.shareUrl.textContent = shareUrl;
+      defaultShareUrlText = shareUrl;
+      dom.shareUrl.textContent = defaultShareUrlText;
     } catch (error) {
-      dom.shareUrl.textContent = window.location.origin;
+      defaultShareUrlText = window.location.origin;
+      dom.shareUrl.textContent = defaultShareUrlText;
     }
   }
 
@@ -2899,6 +2994,7 @@
     state.selectedEngineIds.clear();
     state.selectedWeaponIds.clear();
     clearWeaponOrder();
+    dom.privateRoomPanel.classList.add("hidden");
     showOnlyView("menu");
     dom.mainMenuStatus.textContent = message;
   }
@@ -2920,6 +3016,40 @@
     dom.mainMenuStatus.textContent = `${label} is coming soon. Start Single Player is available now.`;
   }
 
+  function showPrivateRoomJoin() {
+    dom.privateRoomPanel.classList.remove("hidden");
+    dom.privateRoomCodeInput.focus();
+    dom.mainMenuStatus.textContent = "Enter a private room code.";
+  }
+
+  function startPrivateServerFromMenu() {
+    startSinglePlayer();
+    enterWorld();
+    connectMultiplayer({ asHost: true, createRoom: true });
+  }
+
+  function joinPrivateRoomFromMenu() {
+    const roomId = normalizeRoomCode(dom.privateRoomCodeInput.value);
+
+    if (!roomId) {
+      dom.mainMenuStatus.textContent = "Enter a room code first.";
+      dom.privateRoomCodeInput.focus();
+      return;
+    }
+
+    startSinglePlayer();
+    enterWorld({ collectPieces: false });
+    connectMultiplayer({ asHost: false, roomId });
+  }
+
+  function normalizeRoomCode(value) {
+    return String(value ?? "")
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 12);
+  }
+
   function showOnlyView(viewName) {
     dom.tutorialView.classList.toggle("hidden", viewName !== "tutorial");
     dom.mainMenuView.classList.toggle("hidden", viewName !== "menu");
@@ -2938,6 +3068,8 @@
       loadFixture: loadFixtureForTest,
       enterWorld: enterWorldForTest,
       enterConstruction: enterConstructionForTest,
+      startPrivateServer: startPrivateServerForTest,
+      joinPrivateRoom: joinPrivateRoomForTest,
       stopWorld: stopWorldForTest,
       advanceWorld: advanceWorldForTest,
       selectFirstEngine: selectFirstEngineForTest,
@@ -3025,6 +3157,7 @@
     state.multiplayer.connected = false;
     state.multiplayer.clientId = null;
     state.multiplayer.hostId = null;
+    state.multiplayer.roomId = null;
     state.multiplayer.role = "solo";
     state.multiplayer.isHost = false;
     state.multiplayer.peerCount = 0;
@@ -3067,6 +3200,17 @@
         visiblePieces: (state.world.pieces ?? []).filter((piece) => !piece.collected && !piece.destroyed).length,
         projectiles: state.world.projectiles?.length ?? 0,
         weaponEffects: state.world.weaponEffects?.length ?? 0,
+      },
+      multiplayer: {
+        connected: state.multiplayer.connected,
+        clientId: state.multiplayer.clientId,
+        hostId: state.multiplayer.hostId,
+        roomId: state.multiplayer.roomId,
+        role: state.multiplayer.role,
+        isHost: state.multiplayer.isHost,
+        peerCount: state.multiplayer.peerCount,
+        worldSynced: state.multiplayer.worldSynced,
+        remotePlayers: state.multiplayer.remotePlayers.size,
       },
       statuses: {
         construction: dom.statusElement.textContent,
@@ -3237,6 +3381,24 @@
 
   function enterConstructionForTest() {
     enterConstruction();
+    return getTestSnapshot();
+  }
+
+  function startPrivateServerForTest() {
+    if (state.mode !== "world") {
+      enterWorld();
+    }
+
+    connectMultiplayer({ asHost: true, createRoom: true });
+    return getTestSnapshot();
+  }
+
+  function joinPrivateRoomForTest(roomId) {
+    if (state.mode !== "world") {
+      enterWorld({ collectPieces: false });
+    }
+
+    connectMultiplayer({ asHost: false, roomId });
     return getTestSnapshot();
   }
 
@@ -3665,8 +3827,18 @@
   dom.skipTutorialButton.addEventListener("click", skipTutorial);
   dom.startSinglePlayerButton.addEventListener("click", startSinglePlayer);
   dom.joinPublicServerButton.addEventListener("click", () => showPlaceholderMenuStatus("Public multiplayer"));
-  dom.joinPrivateServerButton.addEventListener("click", () => showPlaceholderMenuStatus("Private multiplayer"));
-  dom.startNewServerButton.addEventListener("click", () => showPlaceholderMenuStatus("Server hosting"));
+  dom.joinPrivateServerButton.addEventListener("click", showPrivateRoomJoin);
+  dom.joinPrivateRoomButton.addEventListener("click", joinPrivateRoomFromMenu);
+  dom.privateRoomCodeInput.addEventListener("input", () => {
+    dom.privateRoomCodeInput.value = normalizeRoomCode(dom.privateRoomCodeInput.value);
+  });
+  dom.privateRoomCodeInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      joinPrivateRoomFromMenu();
+    }
+  });
+  dom.startNewServerButton.addEventListener("click", startPrivateServerFromMenu);
   dom.worldMap.addEventListener("pointerdown", handleWorldMapPointerDown, { capture: true });
   dom.worldMap.addEventListener("click", handleWorldMapClick, { capture: true });
   dom.techTreeOverlay.addEventListener("click", (event) => {

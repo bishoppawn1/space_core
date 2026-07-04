@@ -70,11 +70,18 @@
           </button>
           <button class="menu-action" id="join-private-server-button" type="button">
             <strong>Join Private Server</strong>
-            <span>Placeholder for invite links or server codes.</span>
+            <span>Enter a room code from a friend.</span>
           </button>
+          <div class="private-room-panel hidden" id="private-room-panel">
+            <label for="private-room-code-input">Room Code</label>
+            <div class="private-room-row">
+              <input id="private-room-code-input" type="text" autocomplete="off" maxlength="12" placeholder="ABC123" />
+              <button class="primary-button" id="join-private-room-button" type="button">Join</button>
+            </div>
+          </div>
           <button class="menu-action" id="start-new-server-button" type="button">
             <strong>Start New Server</strong>
-            <span>Placeholder for hosting a shared world.</span>
+            <span>Create a private room code and host a shared world.</span>
           </button>
         </div>
 

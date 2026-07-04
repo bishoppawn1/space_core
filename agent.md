@@ -28,7 +28,7 @@ The server also exposes LAN URLs through `server-info.json` for multiplayer shar
 npm test
 ```
 
-The autonomous browser suite starts the local server, opens `/?test=1`, resets the game to deterministic scenarios, and verifies construction, power, launch controls, weapon retargeting, trade/research, ammo routing, repair bots, shield recharge, and salvage collection.
+The autonomous browser suite starts the local server, opens `/?test=1`, resets the game to deterministic scenarios, and verifies construction, power, launch controls, weapon retargeting, private multiplayer rooms, trade/research, ammo routing, repair bots, shield recharge, and salvage collection.
 
 On a fresh machine, install the Playwright Chromium browser once:
 
@@ -123,7 +123,7 @@ Blocks cannot overlap other blocks. Underlays can sit underneath bases or blocks
 - Build-menu Save & Quit persists local progress and leaves multiplayer sessions cleanly.
 - Playwright-based autonomous browser tests cover deterministic construction, world controls, weapon retargeting, trade/research, and core support systems without manual playtesting.
 - New players see a first-run tutorial with basics for building, power, movement, combat, salvage, trade, and research. Completing or skipping it opens a main menu.
-- The main menu can start the single-player game. Public multiplayer, private multiplayer, and new server options are visible placeholders.
+- The main menu can start the single-player game, create a private multiplayer room code, or join a private room code. Public multiplayer remains a placeholder.
 - Scaffold removal now preserves direct base connectivity to the core; players must deconstruct outward pieces first if removing a scaffold would orphan part of the hull.
 
 ## Current Controls
@@ -187,7 +187,8 @@ Blocks cannot overlap other blocks. Underlays can sit underneath bases or blocks
 - Removed invisible NPC cannon auto-reloads; active enemy and trader ships now feed their cannons through ammo factories, conveyors, and splitter conveyors.
 - Rebuilt enemy and trader ship templates again so cannons have directed ammo routes, weapons sit on connected hulls, front-facing weapons are not blocked by their own parts, and all tested templates have enough power.
 - Added an opt-in `?test=1` game harness plus Playwright tests for construction placement/power, launch and engine controls, weapon retargeting, trader exchange/research, ammo routing, repair bots, shield recharge, and salvage collectors.
-- Added a first-run tutorial, skip path, main menu, single-player start button, and placeholder public/private/server multiplayer buttons.
+- Added a first-run tutorial, skip path, main menu, single-player start button, private room creation/joining, and a placeholder public multiplayer button.
+- Replaced the single global multiplayer server state with code-based rooms, including room-local hosts, peers, shared world state, trade relays, damage relays, and fragmented WebSocket frame handling for large packets.
 - Prevented scaffold deletion from leaving disconnected hull islands and added an autonomous regression test for the blocked deconstruction message.
 
 ## Known Issues And Risks
@@ -220,8 +221,8 @@ Blocks cannot overlap other blocks. Underlays can sit underneath bases or blocks
 
 ## Suggested Next Steps
 
-1. Extend the autonomous tests to cover multiplayer host/guest synchronization once the authoritative combat model settles.
+1. Add a public room browser that lists opt-in public rooms from the server.
 2. Add focused enemy-template validation tests so every generated NPC layout keeps power, ammo routes, and weapon lines of fire healthy.
 3. Improve visual ownership of shots so player and enemy beams/projectiles are easier to distinguish.
-4. Make multiplayer clearer: show host/join status, connection errors, and whether the displayed friend link is local-only or LAN-reachable.
+4. Make multiplayer clearer: show whether the displayed connection target is local-only, LAN-reachable, or public-hosted.
 5. Continue balancing enemy AI movement, weapon ranges, ammo flow, and part HP.

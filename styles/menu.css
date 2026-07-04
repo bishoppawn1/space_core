@@ -295,6 +295,48 @@
   line-height: 1.4;
 }
 
+.private-room-panel {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(101, 217, 236, 0.32);
+  border-radius: var(--radius);
+  background: rgba(10, 13, 19, 0.72);
+  padding: 12px;
+}
+
+.private-room-panel label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.private-room-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.private-room-row input {
+  min-width: 0;
+  height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: #0d1017;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  padding: 0 12px;
+  text-transform: uppercase;
+}
+
+.private-room-row input:focus {
+  border-color: var(--cyan);
+  outline: none;
+}
+
 .menu-status {
   grid-column: 1 / -1;
   min-height: 42px;
