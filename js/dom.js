@@ -3,6 +3,21 @@
 
   function getDom() {
     return {
+      tutorialView: document.querySelector("#tutorial-view"),
+      tutorialTitle: document.querySelector("#tutorial-title"),
+      tutorialCopy: document.querySelector("#tutorial-copy"),
+      tutorialPoints: document.querySelector("#tutorial-points"),
+      tutorialVisual: document.querySelector("#tutorial-visual"),
+      tutorialProgress: document.querySelector("#tutorial-progress"),
+      tutorialBackButton: document.querySelector("#tutorial-back-button"),
+      tutorialNextButton: document.querySelector("#tutorial-next-button"),
+      skipTutorialButton: document.querySelector("#skip-tutorial-button"),
+      mainMenuView: document.querySelector("#main-menu-view"),
+      mainMenuStatus: document.querySelector("#main-menu-status"),
+      startSinglePlayerButton: document.querySelector("#start-single-player-button"),
+      joinPublicServerButton: document.querySelector("#join-public-server-button"),
+      joinPrivateServerButton: document.querySelector("#join-private-server-button"),
+      startNewServerButton: document.querySelector("#start-new-server-button"),
       boardElement: document.querySelector("#board"),
       paletteElement: document.querySelector("#tile-palette"),
       statusElement: document.querySelector("#status-bar"),

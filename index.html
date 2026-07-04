@@ -10,11 +10,79 @@
     <link rel="stylesheet" href="./styles/board.css" />
     <link rel="stylesheet" href="./styles/tiles.css" />
     <link rel="stylesheet" href="./styles/inspector.css" />
+    <link rel="stylesheet" href="./styles/menu.css" />
     <link rel="stylesheet" href="./styles/world.css" />
     <link rel="stylesheet" href="./styles/responsive.css" />
   </head>
   <body>
-    <main class="app-shell" id="construction-view">
+    <main class="onboarding-shell" id="tutorial-view">
+      <section class="onboarding-stage" aria-label="New player tutorial">
+        <div class="tutorial-copy">
+          <p class="eyebrow">Tutorial</p>
+          <h1 id="tutorial-title">Build Around The Core</h1>
+          <p id="tutorial-copy">
+            Your core is the heart of the ship. Add scaffold beside it, then mount useful blocks on the scaffold.
+          </p>
+          <ul class="tutorial-points" id="tutorial-points"></ul>
+        </div>
+
+        <div class="tutorial-visual" id="tutorial-visual" data-step="build" aria-hidden="true">
+          <span class="tutorial-grid"></span>
+          <span class="tutorial-part tutorial-core"></span>
+          <span class="tutorial-part tutorial-scaffold one"></span>
+          <span class="tutorial-part tutorial-scaffold two"></span>
+          <span class="tutorial-part tutorial-generator"></span>
+          <span class="tutorial-part tutorial-engine"></span>
+          <span class="tutorial-part tutorial-laser"></span>
+          <span class="tutorial-part tutorial-cable"></span>
+          <span class="tutorial-beam"></span>
+          <span class="tutorial-piece"></span>
+          <span class="tutorial-trader"></span>
+        </div>
+
+        <footer class="tutorial-actions">
+          <button class="secondary-button" id="skip-tutorial-button" type="button">Skip Tutorial</button>
+          <div class="tutorial-progress" id="tutorial-progress" aria-live="polite">1 / 5</div>
+          <div class="tutorial-step-actions">
+            <button class="secondary-button" id="tutorial-back-button" type="button">Back</button>
+            <button class="primary-button wide-action" id="tutorial-next-button" type="button">Next</button>
+          </div>
+        </footer>
+      </section>
+    </main>
+
+    <main class="main-menu-shell hidden" id="main-menu-view">
+      <section class="main-menu-stage" aria-label="Main menu">
+        <div class="main-menu-copy">
+          <p class="eyebrow">Space Core</p>
+          <h1>Main Menu</h1>
+          <p>Build, salvage, research, and survive in the debris field.</p>
+        </div>
+
+        <div class="main-menu-actions" aria-label="Game modes">
+          <button class="menu-action primary" id="start-single-player-button" type="button">
+            <strong>Start Single Player</strong>
+            <span>Enter the build bay and launch when ready.</span>
+          </button>
+          <button class="menu-action" id="join-public-server-button" type="button">
+            <strong>Join Public Server</strong>
+            <span>Placeholder for public matchmaking.</span>
+          </button>
+          <button class="menu-action" id="join-private-server-button" type="button">
+            <strong>Join Private Server</strong>
+            <span>Placeholder for invite links or server codes.</span>
+          </button>
+          <button class="menu-action" id="start-new-server-button" type="button">
+            <strong>Start New Server</strong>
+            <span>Placeholder for hosting a shared world.</span>
+          </button>
+        </div>
+
+        <div class="menu-status" id="main-menu-status" role="status">Choose a mode.</div>
+      </section>
+    </main>
+
+    <main class="app-shell hidden" id="construction-view">
       <aside class="construction-panel" aria-label="Ship construction menu">
         <div class="panel-header">
           <div>

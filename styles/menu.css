@@ -1,0 +1,305 @@
+.onboarding-shell,
+.main-menu-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.onboarding-stage,
+.main-menu-stage {
+  display: grid;
+  width: min(1060px, 100%);
+  min-height: min(720px, calc(100vh - 48px));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(24, 27, 36, 0.98), rgba(9, 11, 18, 0.98)),
+    var(--panel);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
+  overflow: hidden;
+}
+
+.onboarding-stage {
+  grid-template-columns: minmax(300px, 0.88fr) minmax(420px, 1.12fr);
+  grid-template-rows: 1fr auto;
+}
+
+.tutorial-copy,
+.main-menu-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  padding: 44px;
+}
+
+.tutorial-copy h1,
+.main-menu-copy h1 {
+  font-size: 3.35rem;
+  line-height: 0.95;
+}
+
+.tutorial-copy p,
+.main-menu-copy p {
+  max-width: 48ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.tutorial-points {
+  display: grid;
+  gap: 10px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tutorial-points li {
+  border-left: 3px solid var(--cyan);
+  background: rgba(101, 217, 236, 0.07);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 760;
+  line-height: 1.45;
+  padding: 10px 12px;
+}
+
+.tutorial-visual {
+  position: relative;
+  min-height: 520px;
+  border-left: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 20% 18%, rgba(101, 217, 236, 0.16) 0 1px, transparent 2px),
+    radial-gradient(circle at 76% 24%, rgba(242, 184, 75, 0.16) 0 1px, transparent 2px),
+    radial-gradient(circle at 62% 78%, rgba(115, 215, 124, 0.16) 0 1px, transparent 2px),
+    linear-gradient(160deg, rgba(6, 9, 16, 0.1), rgba(5, 7, 12, 0.86));
+  overflow: hidden;
+}
+
+.tutorial-grid {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 360px;
+  height: 360px;
+  background-image:
+    linear-gradient(rgba(81, 89, 107, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(81, 89, 107, 0.35) 1px, transparent 1px);
+  background-size: 45px 45px;
+  border: 1px solid rgba(81, 89, 107, 0.5);
+  transform: translate(-50%, -50%) rotate(0.001deg);
+}
+
+.tutorial-part {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 42px;
+  height: 42px;
+  border: 2px solid var(--line-strong);
+  border-radius: 7px;
+  transform: translate(-50%, -50%);
+}
+
+.tutorial-core {
+  border-color: rgba(242, 184, 75, 0.9);
+  background: radial-gradient(circle, #ffe19a 0 24%, #b9712e 25% 56%, #342016 57%);
+  box-shadow: 0 0 28px rgba(242, 184, 75, 0.32);
+}
+
+.tutorial-scaffold {
+  background: linear-gradient(135deg, #2c3442, #111620);
+}
+
+.tutorial-scaffold.one {
+  transform: translate(calc(-50% + 45px), -50%);
+}
+
+.tutorial-scaffold.two {
+  transform: translate(calc(-50% + 90px), -50%);
+}
+
+.tutorial-generator {
+  background: linear-gradient(90deg, #2f825a, #173322);
+  transform: translate(calc(-50% + 45px), calc(-50% - 45px));
+}
+
+.tutorial-engine {
+  background: linear-gradient(180deg, #ef834e, #5f281b);
+  transform: translate(calc(-50% - 45px), -50%);
+}
+
+.tutorial-laser {
+  background: linear-gradient(180deg, #4fb4c6, #17313b);
+  transform: translate(calc(-50% + 90px), -50%);
+}
+
+.tutorial-cable {
+  width: 118px;
+  height: 12px;
+  border-color: rgba(101, 217, 236, 0.55);
+  background: rgba(101, 217, 236, 0.18);
+  transform: translate(calc(-50% + 42px), calc(-50% + 45px));
+}
+
+.tutorial-beam {
+  position: absolute;
+  left: calc(50% + 110px);
+  top: 50%;
+  width: 190px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cyan), transparent);
+  box-shadow: 0 0 20px rgba(101, 217, 236, 0.5);
+  transform: translateY(-50%);
+}
+
+.tutorial-piece,
+.tutorial-trader {
+  position: absolute;
+  border-radius: 7px;
+}
+
+.tutorial-piece {
+  left: calc(50% + 168px);
+  top: calc(50% + 108px);
+  width: 34px;
+  height: 34px;
+  border: 2px solid rgba(115, 215, 124, 0.78);
+  background: rgba(115, 215, 124, 0.18);
+}
+
+.tutorial-trader {
+  left: calc(50% + 118px);
+  top: calc(50% - 145px);
+  width: 78px;
+  height: 78px;
+  border: 2px solid rgba(242, 184, 75, 0.65);
+  background: rgba(242, 184, 75, 0.08);
+  box-shadow: 0 0 0 58px rgba(242, 184, 75, 0.055);
+}
+
+.tutorial-visual[data-step="build"] .tutorial-generator,
+.tutorial-visual[data-step="build"] .tutorial-engine,
+.tutorial-visual[data-step="build"] .tutorial-laser,
+.tutorial-visual[data-step="build"] .tutorial-cable,
+.tutorial-visual[data-step="build"] .tutorial-beam,
+.tutorial-visual[data-step="build"] .tutorial-piece,
+.tutorial-visual[data-step="build"] .tutorial-trader,
+.tutorial-visual[data-step="power"] .tutorial-engine,
+.tutorial-visual[data-step="power"] .tutorial-laser,
+.tutorial-visual[data-step="power"] .tutorial-beam,
+.tutorial-visual[data-step="power"] .tutorial-piece,
+.tutorial-visual[data-step="power"] .tutorial-trader,
+.tutorial-visual[data-step="movement"] .tutorial-laser,
+.tutorial-visual[data-step="movement"] .tutorial-beam,
+.tutorial-visual[data-step="movement"] .tutorial-piece,
+.tutorial-visual[data-step="movement"] .tutorial-trader,
+.tutorial-visual[data-step="combat"] .tutorial-piece,
+.tutorial-visual[data-step="combat"] .tutorial-trader {
+  opacity: 0.16;
+}
+
+.tutorial-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  background: rgba(13, 15, 21, 0.82);
+  padding: 16px;
+}
+
+.tutorial-step-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.secondary-button {
+  display: inline-grid;
+  place-items: center;
+  min-height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: #141923;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 900;
+  padding: 0 14px;
+}
+
+.secondary-button:hover,
+.menu-action:hover {
+  border-color: var(--cyan);
+}
+
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.wide-action {
+  min-width: 136px;
+}
+
+.tutorial-progress,
+.menu-status {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.main-menu-stage {
+  grid-template-columns: minmax(300px, 0.86fr) minmax(360px, 1.14fr);
+  align-items: center;
+  padding: 34px;
+}
+
+.main-menu-actions {
+  display: grid;
+  gap: 12px;
+  padding: 10px;
+}
+
+.menu-action {
+  display: grid;
+  gap: 5px;
+  min-height: 82px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(20, 24, 33, 0.88);
+  color: var(--text);
+  cursor: pointer;
+  padding: 16px 18px;
+  text-align: left;
+}
+
+.menu-action.primary {
+  border-color: rgba(101, 217, 236, 0.5);
+  background: rgba(32, 52, 58, 0.92);
+}
+
+.menu-action strong {
+  font-size: 1rem;
+}
+
+.menu-action span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.menu-status {
+  grid-column: 1 / -1;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #10131a;
+  line-height: 40px;
+}

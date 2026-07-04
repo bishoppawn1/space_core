@@ -49,6 +49,7 @@
     hasWeaponCooldowns,
     hasRepairBotActivity,
     hasShieldRegenActivity,
+    getLiveTraders,
     getNearestTraderInRange,
     getTraderById,
     buyTraderStockSlot,
@@ -59,8 +60,62 @@
   } = spaceCore.worldSystem;
   const { createMultiplayerClient } = spaceCore.multiplayer;
   const SAVE_STORAGE_KEY = "space-core-save-v1";
+  const TUTORIAL_STORAGE_KEY = "space-core-tutorial-complete-v1";
   const MULTIPLAYER_SNAPSHOT_INTERVAL = 0.1;
   const MULTIPLAYER_WORLD_STATE_INTERVAL = 0.2;
+  const TEST_MODE = new URLSearchParams(window.location.search).has("test");
+  const TUTORIAL_STEPS = [
+    {
+      key: "build",
+      title: "Build Around The Core",
+      copy: "Your core is the heart of the ship. Add scaffold beside it, then mount useful blocks on the scaffold.",
+      points: [
+        "Scaffold expands the hull from the core.",
+        "Blocks need scaffold before they can be placed.",
+        "Use erase and reset when a layout is not working.",
+      ],
+    },
+    {
+      key: "power",
+      title: "Power The Ship",
+      copy: "Generators and electric cable create power networks. Engines, weapons, shields, factories, repair bots, and collectors only work when their network has enough output.",
+      points: [
+        "Generators add power to connected cable networks.",
+        "Powered blocks shut off when demand is higher than supply.",
+        "Click a generator in the build bay to inspect its network.",
+      ],
+    },
+    {
+      key: "movement",
+      title: "Launch And Move",
+      copy: "When the ship is ready, launch into the debris field. Select engines on the ship, turn them on, then turn them off when you want to slow down or repair.",
+      points: [
+        "Engine placement and facing affect thrust and turning.",
+        "Zoom helps you inspect nearby debris and enemies.",
+        "The build menu locks while hostile ships are too close.",
+      ],
+    },
+    {
+      key: "combat",
+      title: "Select Weapons And Target",
+      copy: "Weapons are selected directly on your ship. With a weapon selected, click a target point in the world to set a fire order.",
+      points: [
+        "Lasers need power and cool down between shots.",
+        "Cannons need both power and delivered ammo.",
+        "Destroy enemy cores to release surviving pieces.",
+      ],
+    },
+    {
+      key: "salvage",
+      title: "Salvage, Trade, Research",
+      copy: "Collected parts expand your inventory. Scrap and spare parts unlock research, and trader ships offer extra stock when you fly into their yellow trade radius.",
+      points: [
+        "Loose pieces near your scaffold are collected automatically.",
+        "Salvage Collectors pull distant visible pieces into storage.",
+        "Research unlocks stronger weapons, engines, generators, and logistics.",
+      ],
+    },
+  ];
 
   const dom = spaceCore.dom.getDom();
   const state = {
@@ -71,6 +126,7 @@
     techTreeOpen: false,
     activeTechSection: "weapons",
     selectedTechProjectId: null,
+    tutorialStepIndex: 0,
     hoverCell: null,
     hoverElement: null,
     scrap: INITIAL_SCRAP,
@@ -265,12 +321,11 @@
     }
 
     if (saved) {
-      setStatus(dom, "Progress saved.", "good");
+      showMainMenu("Progress saved. Choose a mode when you are ready.");
     } else {
       setStatus(dom, "Could not save progress.", "bad");
+      renderAll();
     }
-
-    renderAll();
   }
 
   function writeSavedProgress() {
@@ -1094,8 +1149,7 @@
     state.techTreeOpen = false;
     state.selectedTechProjectId = null;
     clearHoverPreview();
-    dom.constructionView.classList.add("hidden");
-    dom.worldView.classList.remove("hidden");
+    showOnlyView("world");
 
     const collection = collectOnEntry
       ? collectNearbyPieces(state.world, state.board, state.inventory)
@@ -1125,8 +1179,7 @@
     state.tradeMenuOpen = false;
     state.activeTraderId = null;
     state.pendingTradeSlots.clear();
-    dom.worldView.classList.add("hidden");
-    dom.constructionView.classList.remove("hidden");
+    showOnlyView("construction");
     state.centerConstructionOnNextRender = true;
     setStatus(dom, "Hangar ready.", "");
     renderAll();
@@ -2691,6 +2744,830 @@
     return key.length === 1 && key >= "0" && key <= "9";
   }
 
+  function initializeEntryFlow() {
+    renderAll();
+
+    if (hasCompletedTutorial()) {
+      showMainMenu("Choose a mode.");
+    } else {
+      showTutorial(0);
+    }
+  }
+
+  function hasCompletedTutorial() {
+    try {
+      return localStorage.getItem(TUTORIAL_STORAGE_KEY) === "true";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function markTutorialComplete() {
+    try {
+      localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
+    } catch (error) {
+      // Local storage can be unavailable in private contexts; the menu still works.
+    }
+  }
+
+  function showTutorial(stepIndex = state.tutorialStepIndex) {
+    stopWorldLoop();
+    cancelScheduledWorldRender();
+    state.mode = "tutorial";
+    state.tutorialStepIndex = clamp(stepIndex, 0, TUTORIAL_STEPS.length - 1);
+    showOnlyView("tutorial");
+    renderTutorial();
+  }
+
+  function renderTutorial() {
+    const step = TUTORIAL_STEPS[state.tutorialStepIndex] ?? TUTORIAL_STEPS[0];
+
+    dom.tutorialTitle.textContent = step.title;
+    dom.tutorialCopy.textContent = step.copy;
+    dom.tutorialVisual.dataset.step = step.key;
+    dom.tutorialProgress.textContent = `${state.tutorialStepIndex + 1} / ${TUTORIAL_STEPS.length}`;
+    dom.tutorialBackButton.disabled = state.tutorialStepIndex === 0;
+    dom.tutorialNextButton.textContent = state.tutorialStepIndex === TUTORIAL_STEPS.length - 1
+      ? "Open Main Menu"
+      : "Next";
+    dom.tutorialPoints.innerHTML = "";
+
+    for (const point of step.points) {
+      const item = document.createElement("li");
+      item.textContent = point;
+      dom.tutorialPoints.append(item);
+    }
+  }
+
+  function previousTutorialStep() {
+    showTutorial(state.tutorialStepIndex - 1);
+  }
+
+  function nextTutorialStep() {
+    if (state.tutorialStepIndex >= TUTORIAL_STEPS.length - 1) {
+      completeTutorial("Tutorial complete. Choose a mode.");
+      return;
+    }
+
+    showTutorial(state.tutorialStepIndex + 1);
+  }
+
+  function skipTutorial() {
+    completeTutorial("Tutorial skipped. Choose a mode.");
+  }
+
+  function completeTutorial(message) {
+    markTutorialComplete();
+    showMainMenu(message);
+  }
+
+  function showMainMenu(message = "Choose a mode.") {
+    stopWorldLoop();
+    cancelScheduledWorldRender();
+    state.mode = "menu";
+    state.tradeMenuOpen = false;
+    state.activeTraderId = null;
+    state.selectedEngineIds.clear();
+    state.selectedWeaponIds.clear();
+    clearWeaponOrder();
+    showOnlyView("menu");
+    dom.mainMenuStatus.textContent = message;
+  }
+
+  function startSinglePlayer() {
+    state.mode = "construction";
+    stopWorldLoop();
+    cancelScheduledWorldRender();
+    state.tradeMenuOpen = false;
+    state.activeTraderId = null;
+    state.pendingTradeSlots.clear();
+    state.centerConstructionOnNextRender = true;
+    showOnlyView("construction");
+    setStatus(dom, "Hangar ready.", "");
+    renderAll();
+  }
+
+  function showPlaceholderMenuStatus(label) {
+    dom.mainMenuStatus.textContent = `${label} is coming soon. Start Single Player is available now.`;
+  }
+
+  function showOnlyView(viewName) {
+    dom.tutorialView.classList.toggle("hidden", viewName !== "tutorial");
+    dom.mainMenuView.classList.toggle("hidden", viewName !== "menu");
+    dom.constructionView.classList.toggle("hidden", viewName !== "construction");
+    dom.worldView.classList.toggle("hidden", viewName !== "world");
+  }
+
+  function installTestApi() {
+    spaceCore.testApi = {
+      reset: resetForTest,
+      snapshot: getTestSnapshot,
+      selectTile: selectTileForTest,
+      placeTile: placeTileForTest,
+      eraseCell: eraseCellForTest,
+      rotateSelection: rotateSelectionForTest,
+      loadFixture: loadFixtureForTest,
+      enterWorld: enterWorldForTest,
+      enterConstruction: enterConstructionForTest,
+      stopWorld: stopWorldForTest,
+      advanceWorld: advanceWorldForTest,
+      selectFirstEngine: selectFirstEngineForTest,
+      selectFirstWeapon: selectFirstWeaponForTest,
+      turnSelectedEngines: turnSelectedEnginesForTest,
+      fireAt: fireAtForTest,
+      targetPoint: getTargetPointForTest,
+      moveEnemyNearPlayer: moveEnemyNearPlayerForTest,
+      weakenEnemyCore: weakenEnemyCoreForTest,
+      moveTraderIntoRange: moveTraderIntoRangeForTest,
+      openTrade: openTradeMenuForTest,
+      buyTradeSlot: buyTradeSlotForTest,
+      refreshTrade: refreshTradeForTest,
+      sellTradeItem: sellTradeItemForTest,
+      openResearch: openResearchForTest,
+      researchProject: researchProjectForTest,
+      setInventory: setInventoryForTest,
+      setScrap: setScrapForTest,
+      unlockTech: unlockTechForTest,
+      damageCell: damageCellForTest,
+      setShieldCharge: setShieldChargeForTest,
+      addSalvagePiece: addSalvagePieceForTest,
+      cellAt: getCellSnapshotForTest,
+      cellsWithBlock: getCellsWithBlockForTest,
+      config: {
+        coreX: spaceCore.config.CORE_X,
+        coreY: spaceCore.config.CORE_Y,
+        columns: spaceCore.config.COLUMNS,
+        rows: spaceCore.config.ROWS,
+      },
+    };
+  }
+
+  function resetForTest(options = {}) {
+    stopWorldLoop();
+    cancelScheduledWorldRender();
+    closeMultiplayerForTest();
+
+    state.selectedTileId = "ship-scaffold";
+    state.activeFilter = "all";
+    state.directionIndex = 0;
+    state.eraseMode = false;
+    state.techTreeOpen = false;
+    state.activeTechSection = "weapons";
+    state.selectedTechProjectId = null;
+    state.hoverCell = null;
+    state.hoverElement = null;
+    state.scrap = Number.isFinite(options.scrap) ? options.scrap : INITIAL_SCRAP;
+    state.inventory = {
+      ...INITIAL_INVENTORY,
+      ...(options.inventory ?? {}),
+    };
+    state.unlockedTechIds = new Set(options.unlockedTechIds ?? []);
+    state.board = createBoard();
+    state.world = createWorldState();
+    state.selectedEngineIds.clear();
+    state.activeEngineIds.clear();
+    state.selectedWeaponIds.clear();
+    clearWeaponOrder();
+    state.tradeMenuOpen = false;
+    state.activeTraderId = null;
+    state.pendingTradeSlots.clear();
+    state.controlGroups = {};
+    state.pendingControlGroupAssignment = false;
+    state.worldZoom = INITIAL_WORLD_ZOOM;
+    state.centerConstructionOnNextRender = false;
+    state.mode = "construction";
+    showOnlyView("construction");
+    localStorage.removeItem(SAVE_STORAGE_KEY);
+    localStorage.removeItem(TUTORIAL_STORAGE_KEY);
+    setStatus(dom, "Test reset.", "");
+    renderAll();
+    return getTestSnapshot();
+  }
+
+  function closeMultiplayerForTest() {
+    multiplayerConnectionToken += 1;
+
+    if (multiplayerClient) {
+      const client = multiplayerClient;
+      multiplayerClient = null;
+      client.close();
+    }
+
+    state.multiplayer.connected = false;
+    state.multiplayer.clientId = null;
+    state.multiplayer.hostId = null;
+    state.multiplayer.role = "solo";
+    state.multiplayer.isHost = false;
+    state.multiplayer.peerCount = 0;
+    state.multiplayer.lastSnapshotAt = 0;
+    state.multiplayer.lastWorldStateAt = 0;
+    state.multiplayer.worldSynced = false;
+    state.multiplayer.sharedWorldRenderKey = "";
+    state.multiplayer.remotePlayers.clear();
+  }
+
+  function getTestSnapshot() {
+    calculatePower(state.board, state.unlockedTechIds);
+    const stats = getStats(state.board, state.unlockedTechIds);
+    const liveEnemies = getLiveWorldEnemies();
+    const liveTraders = getLiveTraders(state.world);
+
+    return {
+      mode: state.mode,
+      selectedTileId: state.selectedTileId,
+      selectedDirection: DIRECTIONS[state.directionIndex],
+      activeFilter: state.activeFilter,
+      eraseMode: state.eraseMode,
+      techTreeOpen: state.techTreeOpen,
+      tradeMenuOpen: state.tradeMenuOpen,
+      activeTraderId: state.activeTraderId,
+      scrap: state.scrap,
+      inventory: clonePlain(state.inventory),
+      unlockedTechIds: [...state.unlockedTechIds],
+      stats,
+      selectedEngineIds: [...state.selectedEngineIds],
+      activeEngineIds: [...state.activeEngineIds],
+      selectedWeaponIds: [...state.selectedWeaponIds],
+      weaponOrder: clonePlain(state.weaponOrder),
+      worldZoom: state.worldZoom,
+      world: {
+        ship: clonePlain(state.world.ship),
+        liveEnemies: liveEnemies.length,
+        liveTraders: liveTraders.length,
+        pieces: state.world.pieces?.length ?? 0,
+        visiblePieces: (state.world.pieces ?? []).filter((piece) => !piece.collected && !piece.destroyed).length,
+        projectiles: state.world.projectiles?.length ?? 0,
+        weaponEffects: state.world.weaponEffects?.length ?? 0,
+      },
+      statuses: {
+        construction: dom.statusElement.textContent,
+        world: dom.worldStatus.textContent,
+      },
+      ui: {
+        constructionHidden: dom.constructionView.classList.contains("hidden"),
+        worldHidden: dom.worldView.classList.contains("hidden"),
+        tradeButtonHidden: dom.tradeButton.classList.contains("hidden"),
+        buildButtonDisabled: dom.buildButton.disabled,
+      },
+    };
+  }
+
+  function selectTileForTest(tileId) {
+    selectTile(tileId);
+    return getTestSnapshot();
+  }
+
+  function placeTileForTest(tileId, x, y, options = {}) {
+    const tile = findTileById(tileId);
+
+    if (tile && options.ensureInventory !== false) {
+      state.inventory[tileId] = Math.max(1, state.inventory[tileId] ?? 0);
+    }
+
+    if (options.direction) {
+      const directionIndex = DIRECTIONS.indexOf(options.direction);
+
+      if (directionIndex >= 0) {
+        state.directionIndex = directionIndex;
+      }
+    }
+
+    selectTile(tileId);
+
+    if (state.selectedTileId === tileId) {
+      placeTile(x, y);
+    }
+
+    return getTestSnapshot();
+  }
+
+  function eraseCellForTest(x, y) {
+    state.eraseMode = true;
+    placeTile(x, y);
+    return getTestSnapshot();
+  }
+
+  function rotateSelectionForTest(times = 1) {
+    const count = Math.max(1, Number(times) || 1);
+
+    for (let index = 0; index < count; index += 1) {
+      rotateSelection();
+    }
+
+    return getTestSnapshot();
+  }
+
+  function loadFixtureForTest(name = "combat") {
+    resetForTest({
+      scrap: 5000,
+      inventory: createFullTestInventory(30),
+      unlockedTechIds: RESEARCH_PROJECTS.map((project) => project.id),
+    });
+
+    if (name === "trade") {
+      loadCombatFixtureForTest();
+      moveTraderIntoRangeForTest(0);
+    } else {
+      loadCombatFixtureForTest();
+    }
+
+    setStatus(dom, `Test fixture loaded: ${name}.`, "good");
+    renderAll();
+    return getTestSnapshot();
+  }
+
+  function loadCombatFixtureForTest() {
+    state.board = createBoard();
+    state.inventory = createFullTestInventory(30);
+    state.scrap = 5000;
+    state.unlockedTechIds = new Set(RESEARCH_PROJECTS.map((project) => project.id));
+
+    const cells = [
+      [-2, -1, "ship-scaffold", "engine", "electric-cable", "down"],
+      [-2, 0, "ship-scaffold", "engine", "electric-cable", "right"],
+      [-1, -1, "ship-scaffold", "fusion-generator", "electric-cable"],
+      [-1, 0, "ship-scaffold", "fusion-generator", "electric-cable"],
+      [-1, 1, "ship-scaffold", "fusion-generator", "electric-cable"],
+      [0, -1, "ship-scaffold", "shield-block", "electric-cable"],
+      [0, 0, null, null, "electric-cable"],
+      [0, 1, "ship-scaffold", "ammo-factory", "electric-cable", "right"],
+      [1, -1, "ship-scaffold", "repair-bot-block", "electric-cable"],
+      [1, 0, "ship-scaffold", "laser", "electric-cable"],
+      [1, 1, "ship-scaffold", "conveyor-belt", "electric-cable", "right"],
+      [2, -1, "ship-scaffold", "salvage-collector", "electric-cable"],
+      [2, 0, "ship-scaffold", "cannon", "electric-cable"],
+      [2, 1, "ship-scaffold", "cannon", "electric-cable"],
+    ];
+
+    for (const [dx, dy, baseId, blockId, underlayId, direction] of cells) {
+      setRelativeCellForTest(dx, dy, { baseId, blockId, underlayId, direction });
+    }
+
+    calculatePower(state.board, state.unlockedTechIds);
+  }
+
+  function createFullTestInventory(count = 20) {
+    const inventory = { ...INITIAL_INVENTORY };
+
+    for (const tile of TILES) {
+      if (!tile.locked) {
+        inventory[tile.id] = count;
+      }
+    }
+
+    inventory.artifact = count;
+    return inventory;
+  }
+
+  function setRelativeCellForTest(dx, dy, options = {}) {
+    const cell = getCell(state.board, spaceCore.config.CORE_X + dx, spaceCore.config.CORE_Y + dy);
+
+    if (!cell) {
+      return null;
+    }
+
+    if (options.baseId) {
+      cell.base = createTileForTest(options.baseId, options.direction, options.baseExtra);
+    }
+
+    if (options.underlayId) {
+      cell.underlay = createTileForTest(options.underlayId, options.direction, options.underlayExtra);
+    }
+
+    if (options.blockId) {
+      cell.block = createTileForTest(options.blockId, options.direction, options.blockExtra);
+    }
+
+    return cell;
+  }
+
+  function createTileForTest(tileId, direction, extra = {}) {
+    const tile = findTileById(tileId);
+    const directionIndex = DIRECTIONS.indexOf(direction);
+    const placedTile = tile
+      ? createPlacedTile(tile, directionIndex >= 0 ? directionIndex : 0)
+      : ensureTileHealth({ id: tileId });
+
+    if (direction && findTileById(tileId)?.rotatable) {
+      placedTile.direction = direction;
+    }
+
+    Object.assign(placedTile, extra ?? {});
+    return ensureTileHealth(placedTile);
+  }
+
+  function enterWorldForTest(options = {}) {
+    enterWorld(options);
+
+    if (options.stopLoop !== false) {
+      stopWorldLoop();
+    }
+
+    return getTestSnapshot();
+  }
+
+  function enterConstructionForTest() {
+    enterConstruction();
+    return getTestSnapshot();
+  }
+
+  function stopWorldForTest() {
+    stopWorldLoop();
+    cancelScheduledWorldRender();
+    return getTestSnapshot();
+  }
+
+  function advanceWorldForTest(seconds = 0.1, options = {}) {
+    const total = Math.max(0, Number(seconds) || 0);
+    const step = Math.max(0.01, Math.min(0.05, Number(options.step) || 0.05));
+    const simulatePve = options.simulatePve ?? false;
+    const collectPieces = options.collectPieces ?? true;
+    const updateProjectiles = options.updateProjectiles ?? true;
+    let elapsed = 0;
+    let mergedResult = createEmptyWorldStepResultForTest();
+
+    calculatePower(state.board, state.unlockedTechIds);
+
+    while (elapsed < total) {
+      const dt = Math.min(step, total - elapsed);
+      const result = stepWorld(
+        state.world,
+        state.board,
+        state.activeEngineIds,
+        state.inventory,
+        dt,
+        getRemoteShips(),
+        {
+          simulatePve,
+          collectPieces,
+          updateProjectiles,
+          includeWorldTargets: options.includeWorldTargets ?? simulatePve,
+          techIds: state.unlockedTechIds,
+        },
+      );
+
+      applyScrapReward(result.scrapCollected);
+      mergedResult = mergeWorldStepResultForTest(mergedResult, result);
+      elapsed += dt;
+    }
+
+    if (mergedResult.collected.length > 0 || mergedResult.scrapCollected > 0) {
+      setWorldStatus(getCollectionMessage(getCollectedPartCount(mergedResult), "Collected test salvage.", mergedResult.scrapCollected), "good");
+    }
+
+    renderAll();
+    return {
+      result: mergedResult,
+      snapshot: getTestSnapshot(),
+    };
+  }
+
+  function createEmptyWorldStepResultForTest() {
+    return {
+      collected: [],
+      scrapCollected: 0,
+      hits: [],
+      ammoChanged: false,
+      shipRepaired: false,
+      shieldChanged: false,
+      worldChanged: false,
+      spawnedPieces: 0,
+      spawnedEnemies: 0,
+      spawnedTraders: 0,
+    };
+  }
+
+  function mergeWorldStepResultForTest(target, result) {
+    target.collected.push(...(result.collected ?? []));
+    target.scrapCollected += result.scrapCollected ?? 0;
+    target.hits.push(...(result.hits ?? []));
+    target.ammoChanged = target.ammoChanged || Boolean(result.ammoChanged);
+    target.shipRepaired = target.shipRepaired || Boolean(result.shipRepaired);
+    target.shieldChanged = target.shieldChanged || Boolean(result.shieldChanged);
+    target.worldChanged = target.worldChanged || Boolean(result.worldChanged);
+    target.spawnedPieces += result.spawnedPieces ?? 0;
+    target.spawnedEnemies += result.spawnedEnemies ?? 0;
+    target.spawnedTraders += result.spawnedTraders ?? 0;
+    return target;
+  }
+
+  function selectFirstEngineForTest(tileId = null) {
+    const engine = getBoardEngineParts(state.board).find((part) => !tileId || part.cell.block?.id === tileId);
+
+    if (engine) {
+      state.selectedEngineIds.clear();
+      state.selectedWeaponIds.clear();
+      state.selectedEngineIds.add(engine.key);
+      setWorldStatus("1 engines selected.");
+      renderWorldOnly();
+    }
+
+    return {
+      selected: engine?.key ?? null,
+      snapshot: getTestSnapshot(),
+    };
+  }
+
+  function selectFirstWeaponForTest(tileId = null) {
+    const weapon = getBoardWeaponParts(state.board).find((part) => !tileId || part.cell.block?.id === tileId);
+
+    if (weapon) {
+      state.selectedWeaponIds.clear();
+      state.selectedEngineIds.clear();
+      state.selectedWeaponIds.add(weapon.key);
+      setWorldStatus("1 weapons selected.");
+      renderWorldOnly();
+    }
+
+    return {
+      selected: weapon?.key ?? null,
+      snapshot: getTestSnapshot(),
+    };
+  }
+
+  function turnSelectedEnginesForTest(on = true) {
+    turnSelectedEngines(Boolean(on));
+    stopWorldLoop();
+    return getTestSnapshot();
+  }
+
+  function fireAtForTest(target) {
+    fireAtWorldTarget(target);
+    stopWorldLoop();
+    return getTestSnapshot();
+  }
+
+  function getTargetPointForTest(target = "ahead") {
+    if (target === "enemy-core") {
+      const enemy = getLiveWorldEnemies()[0];
+      return enemy ? localToWorldPointForTest(enemy.body, 0, 0) : null;
+    }
+
+    if (target === "trader-core") {
+      const trader = getLiveTraders(state.world)[0];
+      return trader ? localToWorldPointForTest(trader.body, 0, 0) : null;
+    }
+
+    if (typeof target === "object" && target) {
+      return localToWorldPointForTest(state.world.ship, target.localX ?? 8, target.localY ?? 0);
+    }
+
+    return localToWorldPointForTest(state.world.ship, 8, 0);
+  }
+
+  function moveEnemyNearPlayerForTest(distance = 420) {
+    const enemy = getLiveWorldEnemies()[0];
+
+    if (!enemy) {
+      return getTestSnapshot();
+    }
+
+    enemy.dead = false;
+    enemy.body.x = state.world.ship.x + distance;
+    enemy.body.y = state.world.ship.y;
+    enemy.body.vx = 0;
+    enemy.body.vy = 0;
+    enemy.body.angle = Math.PI;
+    enemy.body.angularVelocity = 0;
+    enemy.activeEngines = new Set();
+    state.world.enemy = enemy;
+    renderAll();
+    return getTestSnapshot();
+  }
+
+  function weakenEnemyCoreForTest(hp = 1) {
+    const enemy = getLiveWorldEnemies()[0];
+    const coreCell = enemy?.cells?.find((cell) => cell.base?.id === "core");
+
+    if (coreCell?.base) {
+      ensureTileHealth(coreCell.base);
+      coreCell.base.hp = Math.max(1, Math.min(coreCell.base.maxHp, Number(hp) || 1));
+    }
+
+    renderAll();
+    return getTestSnapshot();
+  }
+
+  function moveTraderIntoRangeForTest(index = 0) {
+    const traders = getLiveTraders(state.world);
+    const trader = traders[index] ?? traders[0];
+
+    if (!trader) {
+      return getTestSnapshot();
+    }
+
+    trader.dead = false;
+    trader.hostileToPlayer = false;
+    trader.body.x = state.world.ship.x + Math.min(160, TRADER_TRADE_RADIUS / 2);
+    trader.body.y = state.world.ship.y;
+    trader.body.vx = 0;
+    trader.body.vy = 0;
+    trader.body.angle = Math.PI;
+    trader.body.angularVelocity = 0;
+    trader.activeEngines = new Set();
+    trader.stock = [
+      { kind: "part", tileId: "engine", quantity: 1, scrap: 25 },
+      { kind: "part", tileId: "ship-scaffold", quantity: 3, scrap: 18 },
+      { kind: "part", tileId: "electric-cable", quantity: 4, scrap: 16 },
+      { kind: "part", tileId: "laser", quantity: 1, scrap: 35 },
+      { kind: "artifact", name: "Ancient Artifact", quantity: 1, scrap: 80 },
+    ];
+    renderAll();
+    return getTestSnapshot();
+  }
+
+  function openTradeMenuForTest() {
+    openTradeMenu();
+    return getTestSnapshot();
+  }
+
+  function buyTradeSlotForTest(slotIndex = 0) {
+    buyTradeSlot(slotIndex);
+    return getTestSnapshot();
+  }
+
+  function refreshTradeForTest() {
+    refreshTradeStock();
+    return getTestSnapshot();
+  }
+
+  function sellTradeItemForTest(tileId) {
+    sellTradeItem(tileId);
+    return getTestSnapshot();
+  }
+
+  function openResearchForTest(sectionId = null) {
+    openTechTree();
+
+    if (sectionId) {
+      selectTechSection(sectionId);
+    }
+
+    return getTestSnapshot();
+  }
+
+  function researchProjectForTest(projectId) {
+    const project = RESEARCH_PROJECTS.find((candidate) => candidate.id === projectId);
+
+    if (project) {
+      researchProject(project);
+    }
+
+    return getTestSnapshot();
+  }
+
+  function setInventoryForTest(tileIdOrInventory, count) {
+    if (typeof tileIdOrInventory === "string") {
+      state.inventory[tileIdOrInventory] = Math.max(0, Number(count) || 0);
+    } else {
+      state.inventory = {
+        ...state.inventory,
+        ...(tileIdOrInventory ?? {}),
+      };
+    }
+
+    ensureSelectedTileAvailable();
+    renderAll();
+    return getTestSnapshot();
+  }
+
+  function setScrapForTest(scrap) {
+    state.scrap = Math.max(0, Number(scrap) || 0);
+    renderAll();
+    return getTestSnapshot();
+  }
+
+  function unlockTechForTest(projectIds) {
+    const ids = Array.isArray(projectIds) ? projectIds : [projectIds];
+
+    for (const projectId of ids) {
+      if (projectId) {
+        state.unlockedTechIds.add(projectId);
+      }
+    }
+
+    renderAll();
+    return getTestSnapshot();
+  }
+
+  function damageCellForTest(x, y, layer = "block", amount = 10) {
+    const cell = getCell(state.board, x, y);
+    const tile = cell?.[layer];
+
+    if (tile) {
+      ensureTileHealth(tile);
+      tile.hp = Math.max(1, tile.hp - Math.max(0, Number(amount) || 0));
+    }
+
+    renderAll();
+    return getCellSnapshotForTest(x, y);
+  }
+
+  function setShieldChargeForTest(x, y, shieldHp) {
+    const cell = getCell(state.board, x, y);
+
+    if (cell?.block?.id === "shield-block") {
+      ensureTileHealth(cell.block);
+      cell.block.shieldMaxHp ??= cell.block.maxHp;
+      cell.block.shieldHp = clamp(Number(shieldHp) || 0, 0, cell.block.shieldMaxHp);
+    }
+
+    renderAll();
+    return getCellSnapshotForTest(x, y);
+  }
+
+  function addSalvagePieceForTest(tileId = "engine", options = {}) {
+    const collector = getCellsWithBlockForTest("salvage-collector")[0];
+    const localX = collector ? collector.x - spaceCore.config.CORE_X : 3;
+    const localY = collector ? collector.y - spaceCore.config.CORE_Y : 0;
+    const start = localToWorldPointForTest(state.world.ship, localX, localY);
+    const piece = {
+      id: options.id ?? `test-${tileId}-${Date.now()}`,
+      tileId,
+      x: options.x ?? start.x + (options.distance ?? 260),
+      y: options.y ?? start.y,
+      hp: options.hp ?? spaceCore.tileState.getTileMaxHp(tileId),
+      maxHp: options.maxHp ?? spaceCore.tileState.getTileMaxHp(tileId),
+      connectedToCore: false,
+      collected: false,
+      destroyed: false,
+    };
+
+    if (tileId === "scrap") {
+      piece.scrap = options.scrap ?? 25;
+    }
+
+    state.world.pieces = (state.world.pieces ?? []).filter((candidate) => candidate.id !== piece.id);
+    state.world.pieces.push(piece);
+    renderAll();
+    return clonePlain(piece);
+  }
+
+  function getCellSnapshotForTest(x, y) {
+    return summarizeCellForTest(getCell(state.board, x, y));
+  }
+
+  function getCellsWithBlockForTest(tileId) {
+    const cells = [];
+
+    for (const row of state.board) {
+      for (const cell of row) {
+        if (cell.block?.id === tileId) {
+          cells.push(summarizeCellForTest(cell));
+        }
+      }
+    }
+
+    return cells;
+  }
+
+  function summarizeCellForTest(cell) {
+    if (!cell) {
+      return null;
+    }
+
+    return {
+      x: cell.x,
+      y: cell.y,
+      base: summarizeTileForTest(cell.base),
+      block: summarizeTileForTest(cell.block),
+      underlay: summarizeTileForTest(cell.underlay),
+      powered: Boolean(cell.powered),
+      powerNetworkGenerated: cell.powerNetworkGenerated ?? 0,
+      powerNetworkRequired: cell.powerNetworkRequired ?? 0,
+      powerRatio: cell.powerRatio ?? 0,
+    };
+  }
+
+  function summarizeTileForTest(tile) {
+    if (!tile) {
+      return null;
+    }
+
+    return {
+      id: tile.id,
+      direction: tile.direction ?? null,
+      hp: tile.hp ?? null,
+      maxHp: tile.maxHp ?? null,
+      ammo: tile.ammo ?? null,
+      cooldownRemaining: tile.cooldownRemaining ?? 0,
+      shieldHp: tile.shieldHp ?? null,
+      shieldMaxHp: tile.shieldMaxHp ?? null,
+    };
+  }
+
+  function localToWorldPointForTest(body, localX, localY) {
+    const scaledX = localX * spaceCore.config.SHIP_WORLD_SCALE;
+    const scaledY = localY * spaceCore.config.SHIP_WORLD_SCALE;
+    const cos = Math.cos(body.angle);
+    const sin = Math.sin(body.angle);
+
+    return {
+      x: body.x + scaledX * cos - scaledY * sin,
+      y: body.y + scaledX * sin + scaledY * cos,
+    };
+  }
+
   dom.tabs.forEach((tab) => {
     tab.addEventListener("click", () => setActiveFilter(tab.dataset.filter, tab));
   });
@@ -2714,6 +3591,13 @@
   dom.hostButton.addEventListener("click", hostMultiplayer);
   dom.joinButton.addEventListener("click", joinMultiplayer);
   dom.leaveButton.addEventListener("click", () => leaveMultiplayer());
+  dom.tutorialBackButton.addEventListener("click", previousTutorialStep);
+  dom.tutorialNextButton.addEventListener("click", nextTutorialStep);
+  dom.skipTutorialButton.addEventListener("click", skipTutorial);
+  dom.startSinglePlayerButton.addEventListener("click", startSinglePlayer);
+  dom.joinPublicServerButton.addEventListener("click", () => showPlaceholderMenuStatus("Public multiplayer"));
+  dom.joinPrivateServerButton.addEventListener("click", () => showPlaceholderMenuStatus("Private multiplayer"));
+  dom.startNewServerButton.addEventListener("click", () => showPlaceholderMenuStatus("Server hosting"));
   dom.worldMap.addEventListener("pointerdown", handleWorldMapPointerDown, { capture: true });
   dom.worldMap.addEventListener("click", handleWorldMapClick, { capture: true });
   dom.techTreeOverlay.addEventListener("click", (event) => {
@@ -2729,10 +3613,20 @@
 
   document.addEventListener("keydown", handleKeyDown);
 
-  const loadedSave = loadSavedProgress();
+  if (TEST_MODE) {
+    installTestApi();
+  }
+
+  const loadedSave = !TEST_MODE && loadSavedProgress();
   if (loadedSave) {
     setStatus(dom, "Saved progress loaded.", "good");
   }
   loadShareUrl();
-  renderAll();
+
+  if (TEST_MODE) {
+    showOnlyView("construction");
+    renderAll();
+  } else {
+    initializeEntryFlow();
+  }
 })(window.SpaceCore = window.SpaceCore || {});

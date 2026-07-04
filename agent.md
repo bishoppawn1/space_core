@@ -1,6 +1,6 @@
 # Space Core Progress
 
-Last updated: 2026-07-01
+Last updated: 2026-07-03
 
 ## Game Vision
 
@@ -21,6 +21,20 @@ http://127.0.0.1:4174/
 ```
 
 The server also exposes LAN URLs through `server-info.json` for multiplayer sharing.
+
+## How To Test
+
+```sh
+npm test
+```
+
+The autonomous browser suite starts the local server, opens `/?test=1`, resets the game to deterministic scenarios, and verifies construction, power, launch controls, weapon retargeting, trade/research, ammo routing, repair bots, shield recharge, and salvage collection.
+
+On a fresh machine, install the Playwright Chromium browser once:
+
+```sh
+npm run test:e2e:install
+```
 
 ## Current Tile Set
 
@@ -107,6 +121,9 @@ Blocks cannot overlap other blocks. Underlays can sit underneath bases or blocks
 - Multiplayer can send player snapshots and damage events.
 - Multiplayer hosts own the shared enemy/material simulation and guests render that shared world.
 - Build-menu Save & Quit persists local progress and leaves multiplayer sessions cleanly.
+- Playwright-based autonomous browser tests cover deterministic construction, world controls, weapon retargeting, trade/research, and core support systems without manual playtesting.
+- New players see a first-run tutorial with basics for building, power, movement, combat, salvage, trade, and research. Completing or skipping it opens a main menu.
+- The main menu can start the single-player game. Public multiplayer, private multiplayer, and new server options are visible placeholders.
 
 ## Current Controls
 
@@ -168,6 +185,8 @@ Blocks cannot overlap other blocks. Underlays can sit underneath bases or blocks
 - Added the Splitter Conveyor part, including placement state, ammo routing, trader/loose-piece availability, ammo badges, and distinct graphics.
 - Removed invisible NPC cannon auto-reloads; active enemy and trader ships now feed their cannons through ammo factories, conveyors, and splitter conveyors.
 - Rebuilt enemy and trader ship templates again so cannons have directed ammo routes, weapons sit on connected hulls, front-facing weapons are not blocked by their own parts, and all tested templates have enough power.
+- Added an opt-in `?test=1` game harness plus Playwright tests for construction placement/power, launch and engine controls, weapon retargeting, trader exchange/research, ammo routing, repair bots, shield recharge, and salvage collectors.
+- Added a first-run tutorial, skip path, main menu, single-player start button, and placeholder public/private/server multiplayer buttons.
 
 ## Known Issues And Risks
 
@@ -193,12 +212,14 @@ Blocks cannot overlap other blocks. Underlays can sit underneath bases or blocks
 - `js/power.js`: power calculation.
 - `js/multiplayer.js`: browser WebSocket client.
 - `styles/world.css`: world map, ship parts, effects, projectiles, health bars, and target marker styling.
+- `styles/menu.css`: tutorial and main menu styling.
+- `playwright.config.js`: autonomous browser test runner configuration.
+- `tests/e2e/`: Playwright specs and game harness helpers for deterministic feature testing.
 
 ## Suggested Next Steps
 
-1. Reproduce the player's weapon retargeting issue with a debug overlay or log that displays the current weapon target coordinates and each fired shot's target coordinates.
-2. If retargeting still fails in manual play, move weapon orders into an explicit `state.weaponOrder = { id, target, weaponIds }` object and render/fire from that order only.
-3. Add a simple combat test scenario button or dev shortcut that spawns a powered laser ship instantly for retargeting and collision testing.
-4. Improve visual ownership of shots so player and enemy beams/projectiles are easier to distinguish.
-5. Make multiplayer clearer: show host/join status, connection errors, and whether the displayed friend link is local-only or LAN-reachable.
-6. Continue balancing enemy AI movement, weapon ranges, ammo flow, and part HP.
+1. Extend the autonomous tests to cover multiplayer host/guest synchronization once the authoritative combat model settles.
+2. Add focused enemy-template validation tests so every generated NPC layout keeps power, ammo routes, and weapon lines of fire healthy.
+3. Improve visual ownership of shots so player and enemy beams/projectiles are easier to distinguish.
+4. Make multiplayer clearer: show host/join status, connection errors, and whether the displayed friend link is local-only or LAN-reachable.
+5. Continue balancing enemy AI movement, weapon ranges, ammo flow, and part HP.
