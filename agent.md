@@ -123,7 +123,7 @@ Blocks cannot overlap other blocks. Underlays can sit underneath bases or blocks
 - Build-menu Save & Quit persists local progress and leaves multiplayer sessions cleanly.
 - Playwright-based autonomous browser tests cover deterministic construction, world controls, weapon retargeting, trade/research, and core support systems without manual playtesting.
 - New players see a first-run tutorial with basics for building, power, movement, combat, salvage, trade, and research. Completing or skipping it opens a main menu.
-- The main menu can start the single-player game, open a private-server build flow that creates a room code after Done, or join a private room code. Public multiplayer remains a placeholder.
+- The main menu can start the single-player game, open a private-server build flow that creates a room code after Done, or join a private room code. The world multiplayer panel's Create button also creates a private room code. Public multiplayer remains a placeholder.
 - Scaffold removal now preserves direct base connectivity to the core; players must deconstruct outward pieces first if removing a scaffold would orphan part of the hull.
 
 ## Current Controls
@@ -188,7 +188,7 @@ Blocks cannot overlap other blocks. Underlays can sit underneath bases or blocks
 - Rebuilt enemy and trader ship templates again so cannons have directed ammo routes, weapons sit on connected hulls, front-facing weapons are not blocked by their own parts, and all tested templates have enough power.
 - Added an opt-in `?test=1` game harness plus Playwright tests for construction placement/power, launch and engine controls, weapon retargeting, trader exchange/research, ammo routing, repair bots, shield recharge, and salvage collectors.
 - Added a first-run tutorial, skip path, main menu, single-player start button, private room creation/joining, and a placeholder public multiplayer button.
-- Private server creation now starts in the build menu; pressing Done creates the room and replaces the world multiplayer heading with the room code.
+- Private server creation now starts in the build menu; pressing Done creates the room and replaces the world multiplayer heading with the room code. The world multiplayer panel's Create button follows the same private-code room flow.
 - Replaced the single global multiplayer server state with code-based rooms, including room-local hosts, peers, shared world state, trade relays, damage relays, and fragmented WebSocket frame handling for large packets.
 - Prevented scaffold deletion from leaving disconnected hull islands and added an autonomous regression test for the blocked deconstruction message.
 

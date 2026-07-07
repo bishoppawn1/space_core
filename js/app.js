@@ -1539,7 +1539,7 @@
       enterWorld();
     }
 
-    connectMultiplayer({ asHost: true });
+    connectMultiplayer({ asHost: true, createRoom: true });
   }
 
   function joinMultiplayer() {
