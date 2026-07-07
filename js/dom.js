@@ -80,6 +80,7 @@
       multiplayerTitle: document.querySelector("#multiplayer-title"),
       multiplayerStatus: document.querySelector("#multiplayer-status"),
       multiplayerCount: document.querySelector("#multiplayer-count"),
+      shareLabel: document.querySelector("#share-label"),
       shareUrl: document.querySelector("#share-url"),
       hostButton: document.querySelector("#host-button"),
       joinButton: document.querySelector("#join-button"),

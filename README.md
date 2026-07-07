@@ -38,4 +38,4 @@ npm run test:e2e:install
 
 The GitHub Actions workflow in `.github/workflows/pages.yml` publishes the static game files from `dist` whenever `main` is pushed. The Pages build includes `index.html`, `js`, and `styles`.
 
-The hosted GitHub Pages version runs the single-player/static browser game. WebSocket multiplayer still needs the local `server.js` process or another WebSocket host.
+The hosted GitHub Pages version runs the single-player/static browser game. WebSocket multiplayer still needs the local `server.js` process or another WebSocket host, so the hosted page disables private-room creation and shows a server-offline hint.

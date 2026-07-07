@@ -152,6 +152,7 @@
       clientId: null,
       hostId: null,
       roomId: null,
+      serverAvailable: null,
       role: "solo",
       isHost: false,
       peerCount: 0,
@@ -1551,6 +1552,12 @@
   }
 
   function connectMultiplayer({ asHost, roomId = null, createRoom = false }) {
+    if (state.multiplayer.serverAvailable === false) {
+      setWorldStatus("Private rooms need the local multiplayer server. Run npm start and open the local or LAN URL.", "bad");
+      syncMultiplayerControls();
+      return;
+    }
+
     leaveMultiplayer(false);
     const connectionToken = multiplayerConnectionToken + 1;
     const normalizedRoomId = normalizeRoomCode(roomId);
@@ -2744,21 +2751,30 @@
 
   function syncMultiplayerControls() {
     const privateRoomCode = getPrivateRoomCode();
+    const serverUnavailable = state.multiplayer.serverAvailable === false && !state.multiplayer.connected;
     dom.multiplayerTitle.textContent = privateRoomCode ?? "Multiplayer";
     dom.multiplayerTitle.classList.toggle("room-code-title", Boolean(privateRoomCode));
-    dom.multiplayerStatus.textContent = state.multiplayer.connected
+    dom.multiplayerStatus.textContent = serverUnavailable
+      ? "Server offline"
+      : state.multiplayer.connected
       ? getMultiplayerStatusLabel()
       : "Solo";
-    dom.multiplayerCount.textContent = `${state.multiplayer.peerCount} connected`;
-    if (state.multiplayer.connected && state.multiplayer.roomId) {
-      dom.shareUrl.textContent = state.multiplayer.roomId === "PUBLIC"
-        ? "Public room"
-        : state.multiplayer.roomId;
+    dom.multiplayerCount.textContent = serverUnavailable
+      ? "rooms unavailable"
+      : `${state.multiplayer.peerCount} connected`;
+
+    if (serverUnavailable) {
+      dom.shareLabel.textContent = "Server";
+      dom.shareUrl.textContent = "Run npm start";
+    } else if (state.multiplayer.connected && state.multiplayer.roomId) {
+      dom.shareLabel.textContent = state.multiplayer.roomId === "PUBLIC" ? "Room" : "Room code";
+      dom.shareUrl.textContent = state.multiplayer.roomId === "PUBLIC" ? "Public room" : state.multiplayer.roomId;
     } else {
+      dom.shareLabel.textContent = "Friend link";
       dom.shareUrl.textContent = defaultShareUrlText;
     }
-    dom.hostButton.disabled = state.multiplayer.connected;
-    dom.joinButton.disabled = state.multiplayer.connected;
+    dom.hostButton.disabled = state.multiplayer.connected || serverUnavailable;
+    dom.joinButton.disabled = state.multiplayer.connected || serverUnavailable;
     dom.leaveButton.disabled = !state.multiplayer.connected;
   }
 
@@ -2783,7 +2799,11 @@
   async function loadShareUrl() {
     try {
       const response = await fetch("./server-info.json", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Server info unavailable.");
+      }
       const info = await response.json();
+      state.multiplayer.serverAvailable = true;
       if (state.multiplayer.connected && state.multiplayer.roomId) {
         return;
       }
@@ -2795,9 +2815,12 @@
       defaultShareUrlText = shareUrl;
       dom.shareUrl.textContent = defaultShareUrlText;
     } catch (error) {
-      defaultShareUrlText = window.location.origin;
+      state.multiplayer.serverAvailable = false;
+      defaultShareUrlText = "Run npm start";
       dom.shareUrl.textContent = defaultShareUrlText;
     }
+    syncMultiplayerControls();
+    syncMainMenuMultiplayerControls();
   }
 
   function clamp(value, min, max) {
@@ -3016,6 +3039,7 @@
     clearWeaponOrder();
     dom.privateRoomPanel.classList.add("hidden");
     showOnlyView("menu");
+    syncMainMenuMultiplayerControls();
     dom.mainMenuStatus.textContent = message;
   }
 
@@ -3039,17 +3063,48 @@
     dom.mainMenuStatus.textContent = `${label} is coming soon. Start Single Player is available now.`;
   }
 
+  function syncMainMenuMultiplayerControls() {
+    const serverUnavailable = state.multiplayer.serverAvailable === false;
+    const title = serverUnavailable
+      ? "Private rooms need the local multiplayer server. Run npm start and open the local or LAN URL."
+      : "";
+
+    dom.joinPrivateServerButton.disabled = serverUnavailable;
+    dom.startNewServerButton.disabled = serverUnavailable;
+    dom.joinPrivateServerButton.title = title;
+    dom.startNewServerButton.title = title;
+
+    if (serverUnavailable) {
+      dom.privateRoomPanel.classList.add("hidden");
+    }
+  }
+
   function showPrivateRoomJoin() {
+    if (state.multiplayer.serverAvailable === false) {
+      dom.mainMenuStatus.textContent = "Private rooms need the local multiplayer server. Run npm start and open the local or LAN URL.";
+      return;
+    }
+
     dom.privateRoomPanel.classList.remove("hidden");
     dom.privateRoomCodeInput.focus();
     dom.mainMenuStatus.textContent = "Enter a private room code.";
   }
 
   function startPrivateServerFromMenu() {
+    if (state.multiplayer.serverAvailable === false) {
+      dom.mainMenuStatus.textContent = "Private rooms need the local multiplayer server. Run npm start and open the local or LAN URL.";
+      return;
+    }
+
     startSinglePlayer({ privateServer: true });
   }
 
   function joinPrivateRoomFromMenu() {
+    if (state.multiplayer.serverAvailable === false) {
+      dom.mainMenuStatus.textContent = "Private rooms need the local multiplayer server. Run npm start and open the local or LAN URL.";
+      return;
+    }
+
     const roomId = normalizeRoomCode(dom.privateRoomCodeInput.value);
 
     if (!roomId) {
@@ -3228,6 +3283,7 @@
         clientId: state.multiplayer.clientId,
         hostId: state.multiplayer.hostId,
         roomId: state.multiplayer.roomId,
+        serverAvailable: state.multiplayer.serverAvailable,
         role: state.multiplayer.role,
         isHost: state.multiplayer.isHost,
         peerCount: state.multiplayer.peerCount,

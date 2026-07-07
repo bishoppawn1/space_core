@@ -37,6 +37,27 @@ test("world multiplayer create button replaces the multiplayer title with a room
   await expect(page.locator("#share-url")).toHaveText(/^[A-Z0-9]{6}$/);
 });
 
+test("static hosting clearly disables private room creation", async ({ page }) => {
+  await page.route("**/server-info.json", (route) => route.fulfill({
+    status: 404,
+    contentType: "text/plain",
+    body: "Not found",
+  }));
+  await page.addInitScript((key) => localStorage.setItem(key, "true"), TUTORIAL_STORAGE_KEY);
+  await page.goto("/");
+
+  await expect(page.locator("#start-new-server-button")).toBeDisabled();
+  await page.locator("#start-single-player-button").click();
+  await page.locator("#done-button").click();
+
+  await expect(page.locator("#multiplayer-status")).toHaveText("Server offline");
+  await expect(page.locator("#multiplayer-count")).toHaveText("rooms unavailable");
+  await expect(page.locator("#share-label")).toHaveText("Server");
+  await expect(page.locator("#share-url")).toHaveText("Run npm start");
+  await expect(page.locator("#host-button")).toBeDisabled();
+  await expect(page.locator("#join-button")).toBeDisabled();
+});
+
 test("private multiplayer rooms isolate a host and guest by room code", async ({ page, context }) => {
   const hostBrowser = await openGame(page);
   const guestPage = await context.newPage();
