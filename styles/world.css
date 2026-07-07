@@ -51,6 +51,13 @@
   padding: 8px 10px;
 }
 
+#multiplayer-title.room-code-title {
+  color: var(--cyan);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 1.18rem;
+  font-weight: 950;
+}
+
 .multiplayer-readout span {
   color: var(--text);
   font-size: 0.9rem;

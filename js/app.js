@@ -143,6 +143,7 @@
     pendingTradeSlots: new Set(),
     controlGroups: {},
     pendingControlGroupAssignment: false,
+    pendingPrivateServer: false,
     worldZoom: INITIAL_WORLD_ZOOM,
     centerConstructionOnNextRender: true,
     mode: "construction",
@@ -1215,6 +1216,7 @@
 
   function enterWorld(options = {}) {
     const collectOnEntry = options.collectPieces ?? shouldSimulateSharedWorld();
+    const createPrivateRoom = Boolean(options.createPrivateRoom || state.pendingPrivateServer);
     state.mode = "world";
     state.eraseMode = false;
     state.techTreeOpen = false;
@@ -1235,6 +1237,14 @@
     );
     renderAll();
     startWorldLoop();
+
+    if (createPrivateRoom) {
+      state.pendingPrivateServer = false;
+    }
+
+    if (createPrivateRoom && !state.multiplayer.connected) {
+      connectMultiplayer({ asHost: true, createRoom: true });
+    }
   }
 
   function enterConstruction() {
@@ -2733,6 +2743,9 @@
   }
 
   function syncMultiplayerControls() {
+    const privateRoomCode = getPrivateRoomCode();
+    dom.multiplayerTitle.textContent = privateRoomCode ?? "Multiplayer";
+    dom.multiplayerTitle.classList.toggle("room-code-title", Boolean(privateRoomCode));
     dom.multiplayerStatus.textContent = state.multiplayer.connected
       ? getMultiplayerStatusLabel()
       : "Solo";
@@ -2740,7 +2753,7 @@
     if (state.multiplayer.connected && state.multiplayer.roomId) {
       dom.shareUrl.textContent = state.multiplayer.roomId === "PUBLIC"
         ? "Public room"
-        : `Room ${state.multiplayer.roomId}`;
+        : state.multiplayer.roomId;
     } else {
       dom.shareUrl.textContent = defaultShareUrlText;
     }
@@ -2759,6 +2772,12 @@
     return state.multiplayer.roomId && state.multiplayer.roomId !== "PUBLIC"
       ? `Joined ${state.multiplayer.roomId}`
       : "Connected";
+  }
+
+  function getPrivateRoomCode() {
+    return state.multiplayer.connected && state.multiplayer.roomId && state.multiplayer.roomId !== "PUBLIC"
+      ? state.multiplayer.roomId
+      : null;
   }
 
   async function loadShareUrl() {
@@ -2993,14 +3012,16 @@
     state.activeTraderId = null;
     state.selectedEngineIds.clear();
     state.selectedWeaponIds.clear();
+    state.pendingPrivateServer = false;
     clearWeaponOrder();
     dom.privateRoomPanel.classList.add("hidden");
     showOnlyView("menu");
     dom.mainMenuStatus.textContent = message;
   }
 
-  function startSinglePlayer() {
+  function startSinglePlayer(options = {}) {
     state.mode = "construction";
+    state.pendingPrivateServer = Boolean(options.privateServer);
     stopWorldLoop();
     cancelScheduledWorldRender();
     state.tradeMenuOpen = false;
@@ -3008,8 +3029,10 @@
     state.pendingTradeSlots.clear();
     state.centerConstructionOnNextRender = true;
     showOnlyView("construction");
-    setStatus(dom, "Hangar ready.", "");
     renderAll();
+    setStatus(dom, state.pendingPrivateServer
+      ? "Build your server ship, then press Done to create the room."
+      : "Hangar ready.", "");
   }
 
   function showPlaceholderMenuStatus(label) {
@@ -3023,9 +3046,7 @@
   }
 
   function startPrivateServerFromMenu() {
-    startSinglePlayer();
-    enterWorld();
-    connectMultiplayer({ asHost: true, createRoom: true });
+    startSinglePlayer({ privateServer: true });
   }
 
   function joinPrivateRoomFromMenu() {
@@ -3134,6 +3155,7 @@
     state.pendingTradeSlots.clear();
     state.controlGroups = {};
     state.pendingControlGroupAssignment = false;
+    state.pendingPrivateServer = false;
     state.worldZoom = INITIAL_WORLD_ZOOM;
     state.centerConstructionOnNextRender = false;
     state.mode = "construction";

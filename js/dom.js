@@ -77,6 +77,7 @@
       engineOnButton: document.querySelector("#engine-on-button"),
       engineOffButton: document.querySelector("#engine-off-button"),
       clearSelectionButton: document.querySelector("#clear-selection-button"),
+      multiplayerTitle: document.querySelector("#multiplayer-title"),
       multiplayerStatus: document.querySelector("#multiplayer-status"),
       multiplayerCount: document.querySelector("#multiplayer-count"),
       shareUrl: document.querySelector("#share-url"),

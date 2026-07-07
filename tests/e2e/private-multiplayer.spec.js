@@ -9,9 +9,14 @@ test("main menu start new server creates a private room", async ({ page }) => {
   await expect(page.locator("#main-menu-view")).toBeVisible();
 
   await page.locator("#start-new-server-button").click();
+  await expect(page.locator("#construction-view")).toBeVisible();
+
+  await page.locator("#done-button").click();
   await expect(page.locator("#world-view")).toBeVisible();
   await expect(page.locator("#world-status")).toContainText(/Hosting private room [A-Z0-9]{6}/);
+  await expect(page.locator("#multiplayer-title")).toHaveText(/^[A-Z0-9]{6}$/);
   await expect(page.locator("#multiplayer-status")).toContainText(/Hosting [A-Z0-9]{6}/);
+  await expect(page.locator("#share-url")).toHaveText(/^[A-Z0-9]{6}$/);
 });
 
 test("private multiplayer rooms isolate a host and guest by room code", async ({ page, context }) => {

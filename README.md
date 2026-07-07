@@ -2,7 +2,7 @@
 
 Space Core is a browser-based spaceship construction and combat game. Build a ship around the core, launch into the debris field, salvage parts, trade, research upgrades, and fight enemy ships.
 
-New players see a short tutorial first. Completing or skipping it opens the main menu, where Single Player starts the current local game flow. Private multiplayer rooms can be created or joined with a room code; public server browsing is still a placeholder.
+New players see a short tutorial first. Completing or skipping it opens the main menu, where Single Player starts the current local game flow. Start New Server opens the build menu, then creates a private room code when the player presses Done; public server browsing is still a placeholder.
 
 ## Local Development
 
